@@ -1,10 +1,9 @@
 import {
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -22,14 +21,15 @@ export class UserService {
   }
 
   async findOne(id: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-    });
-    if (!user) {
-      throw new UnauthorizedException(`User ${id} not found`);
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: id,
+        },
+      });
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
     }
-    return user;
   }
 }

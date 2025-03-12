@@ -6,6 +6,7 @@ import {
   Post,
   NotFoundException,
   BadRequestException,
+  Delete,
 } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
@@ -56,6 +57,22 @@ export class QuestionController {
     } catch (error) {
       throw new BadRequestException(
         `Erreur lors de la création de la question: ${error.message}`,
+      );
+    }
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Supprimer une question par ID' })
+  @ApiResponse({ status: 200, description: 'Question supprimée avec succès' })
+  @ApiResponse({ status: 404, description: 'Question non trouvée' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur' })
+  async remove(@Param('id') id: string) {
+    try {
+      await this.questionService.remove(id);
+      return { message: 'Question supprimée avec succès' };
+    } catch (error) {
+      throw new NotFoundException(
+        `Erreur lors de la suppression de la question ${id}: ${error.message}`,
       );
     }
   }

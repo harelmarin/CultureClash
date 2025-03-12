@@ -82,4 +82,19 @@ export class QuestionService {
 
     return createdQuestion;
   }
+
+  async remove(id: string) {
+    try {
+      await this.prisma.choice.deleteMany({
+        where: { questionId: id },
+      });
+      await this.prisma.question.delete({
+        where: { id },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Erreur lors de la suppression de la question ${id} et de ses choix : ${error.message}`,
+      );
+    }
+  }
 }
