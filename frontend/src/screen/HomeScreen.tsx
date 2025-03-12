@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
@@ -7,43 +8,45 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export function HomeScreen({ navigation }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Culture Clash Quiz</Text>
-      <Text style={styles.subtitle}>Testez vos connaissances !</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Culture Clash Quiz</Text>
+        <Text style={styles.subtitle}>Testez vos connaissances !</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Quiz')}
-      >
-        <Text style={styles.buttonText}>Commencer</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Quiz')}
+        >
+          <Text style={styles.buttonText}>Commencer</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  container: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
-  },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
     color: '#6C63FF',
     marginBottom: 10,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
     color: '#666',
     marginBottom: 40,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#6C63FF',
@@ -59,6 +62,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
+    textAlign: 'center',
   },
 }); 

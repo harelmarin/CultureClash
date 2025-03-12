@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
@@ -9,69 +10,78 @@ export function ResultScreen({ navigation, route }: Props) {
   const { score } = route.params;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.scoreText}>Score</Text>
+        <Text style={styles.score}>{score}</Text>
 
-      <Text style={styles.scoreText}>Score</Text>
-      <Text style={styles.score}>{score}</Text>
+        <Text style={styles.message}>
+          {score > 7 ? 'Excellent !' : score > 4 ? 'Bien joué !' : 'Continuez à vous entraîner !'}
+        </Text>
 
-      <Text style={styles.message}>
-        {score > 7 ? 'Excellent !' : score > 4 ? 'Bien joué !' : 'Continuez à vous entraîner !'}
-      </Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Text style={styles.buttonText}>Retour à l'accueil</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Text style={styles.buttonText}>Retour à l'accueil</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  container: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-  },
-  trophy: {
-    width: 150,
-    height: 150,
-    marginBottom: 30,
   },
   scoreText: {
     fontSize: 24,
     color: '#666',
     marginBottom: 10,
+    textAlign: 'center',
   },
   score: {
     fontSize: 72,
-    fontWeight: 'bold',
+    fontWeight: Platform.select({ ios: '700', android: 'bold' }),
     color: '#6C63FF',
     marginBottom: 20,
+    textAlign: 'center',
   },
   message: {
     fontSize: 20,
     color: '#333',
     textAlign: 'center',
     marginBottom: 40,
+    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
   },
   button: {
     backgroundColor: '#6C63FF',
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
+    textAlign: 'center',
   },
 }); 
