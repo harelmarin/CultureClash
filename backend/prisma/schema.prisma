@@ -1,8 +1,103 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+model User {
+  id                     String          @id @default(uuid())
+  email                  String          @unique
+  username               String          @unique
+  password               String
+  points                 Int             @default(0)
+  profilePic             String?
+  createdAt              DateTime        @default(now())
+  sessionsAsPlayerOne    MatchmakingSession[] @relation("PlayerOneSessions")
+  sessionsAsPlayerTwo    MatchmakingSession[] @relation("PlayerTwoSessions")
+  answers                Answer[]
+  friendRequestsSent     FriendRequest[] @relation("SentRequests")
+  friendRequestsReceived FriendRequest[] @relation("ReceivedRequests")
+  follows                Follows[]       @relation("FollowedUser")
+  followedBy             Follows[]       @relation("FollowingUser")
+}
+
+model MatchmakingSession {
+  id            String   @id @default(uuid())
+  playerOneId   String
+  playerOne     User     @relation("PlayerOneSessions", fields: [playerOneId], references: [id])
+  playerTwoId   String?
+  playerTwo     User?    @relation("PlayerTwoSessions", fields: [playerTwoId], references: [id])
+  winnerId      String?
+  status        GameStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+  questions     Question[] @relation("SessionQuestions")
+}
+
+model Question {
+  id               String    @id @default(uuid()) 
+  text             String    
+  correctAnswerId  String?   
+  correctAnswer    Choice?   @relation("CorrectAnswer", fields: [correctAnswerId], references: [id])
+  choices          Choice[]  @relation("QuestionChoices")
+  answers          Answer[]  
+  sessions        MatchmakingSession[] @relation("SessionQuestions")
+}
+
+model Choice {
+  id         String   @id @default(uuid()) 
+  text       String  
+  questionId String  
+  question   Question @relation("QuestionChoices", fields: [questionId], references: [id]) 
+  isCorrect  Boolean 
+  Answer     Answer[]
+
+  Question Question[] @relation("CorrectAnswer")
+}
+
+
+
+model Answer {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  questionId       String
+  question         Question @relation(fields: [questionId], references: [id])
+  selectedChoiceId String?
+  selectedChoice   Choice?  @relation(fields: [selectedChoiceId], references: [id])
+  isCorrect        Boolean
+}
+
+model Follows {
+  id                String         @id @default(uuid())
+  followingUserId   String
+  followedUserId    String
+  status            RequestStatus   @default(PENDING)
+  createdAt         DateTime       @default(now())
+  followingUser     User           @relation("FollowingUser", fields: [followingUserId], references: [id])
+  followedUser      User           @relation("FollowedUser", fields: [followedUserId], references: [id])
+}
+
+model FriendRequest {
+  id            String         @id @default(uuid())
+  senderId      String
+  sender        User           @relation("SentRequests", fields: [senderId], references: [id])
+  receiverId    String
+  receiver      User           @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  status        RequestStatus  @default(PENDING)
+  createdAt     DateTime       @default(now())
+}
+
+enum GameStatus {
+  PENDING
+  IN_PROGRESS
+  FINISHED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
