@@ -1,15 +1,22 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Question } from './entities/question.entity';
 
 @Injectable()
 export class QuestionService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    const questions = this.prisma.question.findMany({
+  async findAll(): Promise<Question[]> {
+    const questions = await this.prisma.question.findMany({
       include: {
-        choices: true,
+        choices: {
+          select: {
+            id: true,
+            text: true,
+            isCorrect: true,
+          },
+        },
       },
     });
 
@@ -20,13 +27,19 @@ export class QuestionService {
     return questions;
   }
 
-  findOne(id: string) {
+  async findOne(id: string): Promise<Question> {
     const question = this.prisma.question.findUnique({
       where: {
         id: id,
       },
       include: {
-        choices: true,
+        choices: {
+          select: {
+            id: true,
+            text: true,
+            isCorrect: true,
+          },
+        },
       },
     });
 
@@ -37,7 +50,7 @@ export class QuestionService {
     return question;
   }
 
-  create(createQuestionDto: CreateQuestionDto) {
+  async create(createQuestionDto: CreateQuestionDto) {
     return this.prisma.question.create({
       data: {
         text: createQuestionDto.text,
@@ -51,7 +64,13 @@ export class QuestionService {
         },
       },
       include: {
-        choices: true,
+        choices: {
+          select: {
+            id: true,
+            text: true,
+            isCorrect: true,
+          },
+        },
       },
     });
   }

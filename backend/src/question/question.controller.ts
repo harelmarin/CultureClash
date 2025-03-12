@@ -28,6 +28,11 @@ export class QuestionController {
   @ApiResponse({ status: 404, description: 'Question non trouvée' })
   async findOne(@Param('id') id: string) {
     const question = await this.questionService.findOne(id);
+
+    if (!question) {
+      throw new NotFoundException(`Question ${id} non trouvée`);
+    }
+
     return question;
   }
 

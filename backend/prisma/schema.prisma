@@ -17,7 +17,6 @@ model User {
   createdAt              DateTime        @default(now())
   sessionsAsPlayerOne    MatchmakingSession[] @relation("PlayerOneSessions")
   sessionsAsPlayerTwo    MatchmakingSession[] @relation("PlayerTwoSessions")
-  answers                Answer[]
   friendRequestsSent     FriendRequest[] @relation("SentRequests")
   friendRequestsReceived FriendRequest[] @relation("ReceivedRequests")
   follows                Follows[]       @relation("FollowedUser")
@@ -42,7 +41,6 @@ model Question {
   correctAnswerId  String?   
   correctAnswer    Choice?   @relation("CorrectAnswer", fields: [correctAnswerId], references: [id])
   choices          Choice[]  @relation("QuestionChoices")
-  answers          Answer[]  
   sessions        MatchmakingSession[] @relation("SessionQuestions")
 }
 
@@ -52,22 +50,8 @@ model Choice {
   questionId String  
   question   Question @relation("QuestionChoices", fields: [questionId], references: [id]) 
   isCorrect  Boolean 
-  Answer     Answer[]
 
   Question Question[] @relation("CorrectAnswer")
-}
-
-
-
-model Answer {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id])
-  questionId       String
-  question         Question @relation(fields: [questionId], references: [id])
-  selectedChoiceId String?
-  selectedChoice   Choice?  @relation(fields: [selectedChoiceId], references: [id])
-  isCorrect        Boolean
 }
 
 model Follows {
