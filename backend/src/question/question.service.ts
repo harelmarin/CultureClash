@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class QuestionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   findAll() {
     const questions = this.prisma.question.findMany({
@@ -25,10 +25,16 @@ export class QuestionService {
       where: {
         id: id,
       },
+      include: {
+        choices: true,
+      },
     });
+
     if (!question) {
       throw new UnauthorizedException(`Question ${id} not found`);
     }
+
+    return question;
   }
 
   create(createQuestionDto: CreateQuestionDto) {
@@ -36,10 +42,12 @@ export class QuestionService {
       data: {
         text: createQuestionDto.text,
         choices: {
-          create: createQuestionDto.choices.map((choice) => ({
-            text: choice.text,
-            isCorrect: choice.isCorrect,
-          })),
+          createMany: {
+            data: createQuestionDto.choices.map((choice) => ({
+              text: choice.text,
+              isCorrect: choice.isCorrect,
+            })),
+          },
         },
       },
       include: {

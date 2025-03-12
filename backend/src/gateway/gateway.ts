@@ -2,13 +2,14 @@ import { OnModuleInit } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from 'socket.io';
 
-interface PlayerData {
-  socketId: string;
-}
-
 @WebSocketGateway({
-  cors: { origin: "*" },
-  namespace: '/'
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  namespace: '/',
+  transports: ['websocket', 'polling'],
 })
 export class MyGateway implements OnModuleInit {
   @WebSocketServer()
@@ -18,34 +19,34 @@ export class MyGateway implements OnModuleInit {
 
   onModuleInit() {
     console.log("✅ WebSocket Gateway est démarré !");
-  }
+    this.server.on('connection', (socket) => {
+      console.log(`🔌 Nouvelle connexion : ${socket.id}`);
 
-  @SubscribeMessage('chat')
-  handleChat(
-    @MessageBody() message: string,
-    @ConnectedSocket() client: Socket
-  ) {
-    console.log(`📬 Message reçu de ${client.id} : ${message}`);
-    this.server.emit('chat', { message, sender: client.id });
+      socket.on('disconnect', () => {
+        console.log(`❌ Déconnexion : ${socket.id}`);
+        this.removeFromQueue(socket.id);
+      });
+    });
   }
-
 
   @SubscribeMessage('joinQueue')
   handleJoinQueue(
-    @ConnectedSocket() client: Socket
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any
   ) {
+    console.log(`📥 Le joueur ${client.id} a rejoint la file d'attente.`);
 
+    // Vérifier si le joueur est déjà dans la file d'attente
     if (this.queue.includes(client)) {
-      client.emit('error', {
-        message: 'Déjà dans la file d attente'
-      });
+      client.emit('error', { message: 'Déjà dans la file d\'attente' });
       return;
     }
 
+    // Ajouter le client à la file d'attente
     this.queue.push(client);
-    console.log(`📥 Le joueur ${client.id} a rejoint la file d'attente.`);
     console.log(`Nombre de joueurs en attente : ${this.queue.length}`);
 
+    // Lorsque 2 joueurs sont dans la file d'attente, commencer la partie
     if (this.queue.length >= 2) {
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
@@ -74,15 +75,10 @@ export class MyGateway implements OnModuleInit {
   handleLeaveQueue(@ConnectedSocket() client: Socket) {
     this.removeFromQueue(client.id);
     client.emit('leftQueue');
+    console.log(`📤 Le joueur ${client.id} a quitté la file d'attente.`);
   }
 
   private removeFromQueue(socketId: string) {
-    this.queue = this.queue.filter(player => player.id !== socketId);
-    console.log(`📤 Le joueur ${socketId} a quitté la file d'attente.`);
-  }
-
-  handleDisconnect(client: Socket) {
-    this.removeFromQueue(client.id);
-    console.log(`❌ Le joueur ${client.id} s'est déconnecté`);
+    this.queue = this.queue.filter(socket => socket.id !== socketId);
   }
 }
