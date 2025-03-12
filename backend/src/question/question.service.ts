@@ -7,7 +7,11 @@ export class QuestionService {
   constructor(private prisma: PrismaService) {}
 
   findAll() {
-    const questions = this.prisma.question.findMany();
+    const questions = this.prisma.question.findMany({
+      include: {
+        choices: true,
+      },
+    });
 
     if (!questions) {
       throw new UnauthorizedException('No questions found');

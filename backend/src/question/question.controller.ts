@@ -28,10 +28,7 @@ export class QuestionController {
   @ApiResponse({ status: 404, description: 'Question non trouvée' })
   async findOne(@Param('id') id: string) {
     const question = await this.questionService.findOne(id);
-    return {
-      message: 'Question récupérée avec succès',
-      data: question,
-    };
+    return question;
   }
 
   @Post()
