@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Question } from './entities/question.entity';
@@ -8,50 +12,47 @@ export class QuestionService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(): Promise<Question[]> {
-    const questions = await this.prisma.question.findMany({
-      include: {
-        choices: {
-          select: {
-            id: true,
-            text: true,
-            isCorrect: true,
+    try {
+      const questions = await this.prisma.question.findMany({
+        include: {
+          choices: {
+            select: {
+              id: true,
+              text: true,
+              isCorrect: true,
+            },
           },
         },
-      },
-    });
-
-    if (!questions) {
-      throw new UnauthorizedException('No questions found');
+      });
+      return questions;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Erreur lors de la récupération des questions : ${error.message}`,
+      );
     }
-
-    return questions;
   }
 
   async findOne(id: string): Promise<Question> {
-    const question = this.prisma.question.findUnique({
-      where: {
-        id: id,
-      },
-      include: {
-        choices: {
-          select: {
-            id: true,
-            text: true,
-            isCorrect: true,
+    try {
+      const question = await this.prisma.question.findUnique({
+        where: { id },
+        include: {
+          choices: {
+            select: { id: true, text: true, isCorrect: true },
           },
         },
-      },
-    });
+      });
 
-    if (!question) {
-      throw new UnauthorizedException(`Question ${id} not found`);
+      return question;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Erreur lors de la récupération de la question ${id} : ${error.message}`,
+      );
     }
-
-    return question;
   }
 
   async create(createQuestionDto: CreateQuestionDto) {
-    return this.prisma.question.create({
+    const createdQuestion = await this.prisma.question.create({
       data: {
         text: createQuestionDto.text,
         choices: {
@@ -64,14 +65,21 @@ export class QuestionService {
         },
       },
       include: {
-        choices: {
-          select: {
-            id: true,
-            text: true,
-            isCorrect: true,
-          },
-        },
+        choices: true,
       },
     });
+
+    const correctChoice = createdQuestion.choices.find(
+      (choice) => choice.isCorrect,
+    );
+
+    if (correctChoice) {
+      await this.prisma.question.update({
+        where: { id: createdQuestion.id },
+        data: { correctAnswerId: correctChoice.id },
+      });
+    }
+
+    return createdQuestion;
   }
 }
