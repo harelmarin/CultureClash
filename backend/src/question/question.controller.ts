@@ -76,4 +76,22 @@ export class QuestionController {
       );
     }
   }
+
+  @Delete()
+  @ApiOperation({ summary: 'Supprimer toutes les questions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Toutes les questions ont été supprimées',
+  })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur' })
+  async removeAll() {
+    try {
+      await this.questionService.removeAll();
+      return { message: 'Toutes les questions ont été supprimées' };
+    } catch (error) {
+      throw new NotFoundException(
+        `Erreur lors de la suppression de toutes les questions: ${error.message}`,
+      );
+    }
+  }
 }

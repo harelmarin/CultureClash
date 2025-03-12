@@ -5,10 +5,16 @@ import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuestionModule } from './question/question.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { SeedModule } from '../prisma/seed/seed.module';
 @Module({
-  imports: [UserModule, PrismaModule, QuestionModule, GatewayModule],
+  imports: [
+    UserModule,
+    PrismaModule,
+    QuestionModule,
+    GatewayModule,
+    SeedModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
-
+export class AppModule {}

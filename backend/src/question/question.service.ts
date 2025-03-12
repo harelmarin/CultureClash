@@ -97,4 +97,23 @@ export class QuestionService {
       );
     }
   }
+
+  async findByText(text: string) {
+    return this.prisma.question.findFirst({
+      where: {
+        text: text,
+      },
+    });
+  }
+
+  async removeAll() {
+    try {
+      await this.prisma.choice.deleteMany();
+      await this.prisma.question.deleteMany();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Erreur lors de la suppression de toutes les questions : ${error.message}`,
+      );
+    }
+  }
 }
