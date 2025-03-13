@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserWithoutPassword } from 'src/user/entities/user.entity';
+import { LocalAuthGuard } from './guards/local.auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -30,5 +33,13 @@ export class AuthController {
     } catch (error) {
       throw error;
     }
+  }
+
+  @Post('login')
+  @UseGuards(LocalAuthGuard)
+  async login(@Body() loginDto: LoginDto) {
+    return {
+      message: 'Login successful',
+    };
   }
 }

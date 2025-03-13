@@ -2,11 +2,14 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { UserService } from 'src/user/user.service';
+import { LoginDto } from './dto/login.dto';
+import { UserWithoutPassword } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +48,31 @@ export class AuthService {
     const { password, ...userWithoutPassword } = user;
 
     // Retourne l'utilisateur sans le password
+    return userWithoutPassword;
+  }
+
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserWithoutPassword> {
+    console.log('Login Attempt:', password);
+
+    // Vérifie si l'utilisateur existe dans la base de données
+    const userbyUsername = await this.userService.findbyUsername(username);
+    if (!userbyUsername) {
+      throw new ConflictException('Utilisateur non trouvé');
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      userbyUsername.password,
+    );
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Mot de passe incorrect');
+    }
+
+    const { password: userPassword, ...userWithoutPassword } = userbyUsername;
+
     return userWithoutPassword;
   }
 }

@@ -29,7 +29,7 @@ export class RegisterDto {
   @ApiProperty({
     description: 'Le mot de passe',
     type: String,
-    example: 'Password',
+    example: 'password',
   })
   @IsString()
   @MinLength(6)
