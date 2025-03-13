@@ -7,6 +7,7 @@ import { QuestionModule } from './question/question.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { SeedModule } from '../prisma/seed/seed.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     UserModule,
@@ -15,6 +16,7 @@ import { MatchmakingModule } from './matchmaking/matchmaking.module';
     GatewayModule,
     SeedModule,
     MatchmakingModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -23,3 +23,24 @@ export class User {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }
+
+@Entity('users')
+export class UserWithoutPassword {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  email: string;
+
+  @Column()
+  username: string;
+
+  @Column({ default: 0 })
+  points: number;
+
+  @Column({ nullable: true })
+  profilePic: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+}

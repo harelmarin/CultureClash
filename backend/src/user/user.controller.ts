@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
@@ -35,7 +35,43 @@ export class UserController {
         message: `Utilisateur ${id} non trouvé`,
       };
     }
-
     return user;
+  }
+
+  @Get('username/:name')
+  @ApiOperation({ summary: 'Récupérer un utilisateur par username' })
+  @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async findbyUsername(@Param('name') name: string) {
+    const user = await this.userService.findbyUsername(name);
+
+    if (!user) {
+      return {
+        message: `Utilisateur ${name} non trouvé`,
+      };
+    }
+    return user;
+  }
+
+  @Get('email/:email')
+  @ApiOperation({ summary: 'Récupérer un utilisateur par email' })
+  @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async findbyEmail(@Param('name') email: string) {
+    const user = await this.userService.findbyEmail(email);
+
+    if (!user) {
+      return {
+        message: `Utilisateur avec le mail ${email} non trouvé`,
+      };
+    }
+    return user;
+  }
+
+  @Delete(':name')
+  @ApiOperation({ summary: 'Delete un Utilisateur par son username' })
+  @ApiResponse({ status: 200, description: 'Utilisateur Delete' })
+  async delete(@Param('name') name: string) {
+    return this.userService.delete(name);
   }
 }

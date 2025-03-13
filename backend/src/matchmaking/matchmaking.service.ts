@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateMatchmakingDto } from './dto/create-matchmaking.dto';
-import { UpdateMatchmakingDto } from './dto/update-matchmaking.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Matchmaking } from './entities/matchmaking.entity';
 
@@ -51,7 +50,5 @@ export class MatchmakingService {
     }
   }
 
-  findOne(id: string) {
-    
-  }
+  findOne(id: string) {}
 }
