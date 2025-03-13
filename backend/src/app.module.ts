@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { QuestionModule } from './question/question.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { SeedModule } from '../prisma/seed/seed.module';
+import { MatchmakingModule } from './matchmaking/matchmaking.module';
 @Module({
   imports: [
     UserModule,
@@ -13,6 +14,7 @@ import { SeedModule } from '../prisma/seed/seed.module';
     QuestionModule,
     GatewayModule,
     SeedModule,
+    MatchmakingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

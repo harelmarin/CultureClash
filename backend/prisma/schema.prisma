@@ -24,16 +24,19 @@ model User {
 }
 
 model MatchmakingSession {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   playerOneId   String
-  playerOne     User     @relation("PlayerOneSessions", fields: [playerOneId], references: [id])
+  playerOne     User        @relation("PlayerOneSessions", fields: [playerOneId], references: [id])
   playerTwoId   String?
-  playerTwo     User?    @relation("PlayerTwoSessions", fields: [playerTwoId], references: [id])
+  playerTwo     User?       @relation("PlayerTwoSessions", fields: [playerTwoId], references: [id])
   winnerId      String?
-  status        GameStatus @default(PENDING)
-  createdAt     DateTime @default(now())
-  questions     Question[] @relation("SessionQuestions")
+  playerOneScore Int         @default(0)
+  playerTwoScore Int         @default(0)
+  status        GameStatus  @default(PENDING)
+  createdAt     DateTime    @default(now())
+  questions     Question[]  @relation("SessionQuestions")
 }
+
 
 model Question {
   id               String    @id @default(uuid()) 
