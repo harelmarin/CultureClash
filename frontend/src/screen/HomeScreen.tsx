@@ -15,7 +15,7 @@ export function HomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Quiz')}
+          onPress={() => navigation.navigate('Room')}
         >
           <Text style={styles.buttonText}>Commencer</Text>
         </TouchableOpacity>

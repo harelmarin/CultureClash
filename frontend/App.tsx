@@ -12,12 +12,6 @@ import { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-
-
-
-
-
-
 export default function App() {
   return (
     <View style={{ flex: 1 }}>
@@ -53,6 +47,12 @@ export default function App() {
               component={ResultScreen}
               options={{ title: 'Résultat' }}
             />
+            <Stack.Screen
+              name="Room"
+              component={RoomScreen}
+              options={{ title: 'Matchmaking' }}
+            />
+
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
