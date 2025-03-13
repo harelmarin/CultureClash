@@ -6,10 +6,17 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { HomeScreen } from './src/screen/HomeScreen';
 import { QuizScreen } from './src/screen/QuizScreen';
+import RoomScreen from './src/screen/RoomScreen';
 import { ResultScreen } from './src/screen/ResultScreen';
 import { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+
+
+
+
+
 
 export default function App() {
   return (
