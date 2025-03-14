@@ -9,6 +9,8 @@ import { SeedModule } from '../prisma/seed/seed.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionModule } from './auth/session/session.module';
+import { FriendRequestModule } from './friend-request/friend-request.module';
+import { FollowModule } from './follow/follow.module';
 @Module({
   imports: [
     UserModule,
@@ -19,6 +21,8 @@ import { SessionModule } from './auth/session/session.module';
     MatchmakingModule,
     AuthModule,
     SessionModule,
+    FriendRequestModule,
+    FollowModule,
   ],
   controllers: [AppController],
   providers: [AppService],
