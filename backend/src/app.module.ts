@@ -8,6 +8,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { SeedModule } from '../prisma/seed/seed.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
 import { AuthModule } from './auth/auth.module';
+import { SessionModule } from './auth/session/session.module';
 @Module({
   imports: [
     UserModule,
@@ -17,6 +18,7 @@ import { AuthModule } from './auth/auth.module';
     SeedModule,
     MatchmakingModule,
     AuthModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

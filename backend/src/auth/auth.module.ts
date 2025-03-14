@@ -6,6 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategies/local.strategy';
 import { LocalAuthGuard } from './guards/local.auth.guard';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [PassportModule],
@@ -16,6 +17,7 @@ import { LocalAuthGuard } from './guards/local.auth.guard';
     UserService,
     LocalStrategy,
     LocalAuthGuard,
+    SessionModule,
   ],
 })
 export class AuthModule {}

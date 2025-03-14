@@ -55,8 +55,6 @@ export class AuthService {
     username: string,
     password: string,
   ): Promise<UserWithoutPassword> {
-    console.log('Login Attempt:', password);
-
     // Vérifie si l'utilisateur existe dans la base de données
     const userbyUsername = await this.userService.findbyUsername(username);
     if (!userbyUsername) {
@@ -68,7 +66,7 @@ export class AuthService {
       userbyUsername.password,
     );
     if (!passwordMatch) {
-      throw new UnauthorizedException('Mot de passe incorrect');
+      throw new UnauthorizedException('Identifiants incorrect');
     }
 
     const { password: userPassword, ...userWithoutPassword } = userbyUsername;

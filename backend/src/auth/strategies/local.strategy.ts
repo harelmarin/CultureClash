@@ -19,7 +19,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     username: string,
     password: string,
   ): Promise<UserWithoutPassword> {
-    console.log('Login Attempt:', username, password);
     const user = await this.authService.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException('Identifiants invalides');
