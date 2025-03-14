@@ -52,7 +52,6 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   async login(@Request() req, @Body() loginDto: LoginDto) {
     req.session.user = req.user;
-    console.log('Session créée:', req.session);
     return { message: 'Login réussi', user: req.user };
   }
 

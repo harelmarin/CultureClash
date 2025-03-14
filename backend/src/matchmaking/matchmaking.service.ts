@@ -2,17 +2,36 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateMatchmakingDto } from './dto/create-matchmaking.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Matchmaking } from './entities/matchmaking.entity';
+import { EndGameDto } from './dto/end-game.dto';
+import { QuestionService } from 'src/question/question.service';
 
 @Injectable()
 export class MatchmakingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly questionService: QuestionService,
+  ) {}
 
   async create(createMatchmakingDto: CreateMatchmakingDto) {
+    const questions = await this.questionService.getRandom(3);
+
     try {
       const matchs = await this.prisma.matchmakingSession.create({
         data: {
           playerOneId: createMatchmakingDto.playerOneId,
           playerTwoId: createMatchmakingDto.playerTwoId,
+          questions: {
+            connect: questions.map((question) => ({ id: question.id })),
+          },
+        },
+        include: {
+          playerOne: true,
+          playerTwo: true,
+          questions: {
+            include: {
+              choices: true,
+            },
+          },
         },
       });
       return matchs;
@@ -50,5 +69,40 @@ export class MatchmakingService {
     }
   }
 
-  findOne(id: string) {}
+  async endgame(endgameDto: EndGameDto): Promise<Matchmaking> {
+    try {
+      const updatedMatch = await this.prisma.matchmakingSession.update({
+        where: {
+          id: endgameDto.ID,
+        },
+        data: {
+          playerOneScore: endgameDto.playerOneScore,
+          playerTwoScore: endgameDto.playerTwoScore,
+          winnerId: endgameDto.winnerId,
+          status: 'FINISHED',
+        },
+        include: {
+          playerOne: true,
+          playerTwo: true,
+          questions: {
+            include: {
+              choices: true,
+            },
+          },
+        },
+      });
+
+      return {
+        ...updatedMatch,
+        questions: updatedMatch.questions.map((question) => ({
+          ...question,
+          choices: question.choices || [],
+        })),
+      };
+    } catch (error) {
+      throw new Error(
+        'Erreur lors de la mise à jour de la session de matchmaking',
+      );
+    }
+  }
 }

@@ -116,4 +116,30 @@ export class QuestionService {
       );
     }
   }
+
+  async getRandom(limit: number): Promise<Question[]> {
+    try {
+      const allQuestions = await this.prisma.question.findMany({
+        include: {
+          choices: {
+            select: {
+              id: true,
+              text: true,
+              isCorrect: true,
+            },
+          },
+        },
+      });
+
+      const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
+
+      const randomQuestions = shuffledQuestions.slice(0, limit);
+
+      return randomQuestions;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Erreur lors de la récupération des questions: ${error.message}`,
+      );
+    }
+  }
 }

@@ -1,10 +1,19 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class EndGameDto {
   @ApiProperty({
+    description: 'ID de la game',
+    type: String,
+    example: 'fed2c5fb-45bb-4fdc-80bf-4688d8cb94cd',
+  })
+  @IsString()
+  ID: string;
+
+  @ApiProperty({
     description: 'Score du joueur 1',
     type: Number,
+    example: 30,
   })
   @IsNumber()
   playerOneScore: number;
@@ -12,7 +21,16 @@ export class EndGameDto {
   @ApiProperty({
     description: 'Score du joueur 2',
     type: Number,
+    example: 70,
   })
   @IsNumber()
   playerTwoScore: number;
+
+  @ApiProperty({
+    description: 'ID du joueur gagnant',
+    type: String,
+    example: '4ff74b1e-8101-486d-853c-45d4db14a750',
+  })
+  @IsString()
+  winnerId: string;
 }

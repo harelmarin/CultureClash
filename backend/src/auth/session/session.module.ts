@@ -16,7 +16,14 @@ const pool = createPool({
   queueLimit: 0,
 });
 
-const sessionStore = new MySQLStore({}, pool);
+const sessionStore = new MySQLStore(
+  {
+    clearExpired: true,
+    checkExpirationInterval: 900000,
+    expiration: 1000 * 60 * 60 * 24,
+  },
+  pool,
+);
 
 @Module({})
 export class SessionModule implements NestModule {

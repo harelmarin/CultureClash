@@ -94,4 +94,12 @@ export class QuestionController {
       );
     }
   }
+
+  @Get('random/:limit')
+  @ApiOperation({ summary: 'Récupérer une question par ID' })
+  @ApiResponse({ status: 200, description: 'Retourne une question spécifique' })
+  @ApiResponse({ status: 404, description: 'Question non trouvée' })
+  async randomQuestion(@Param('limit') limit: number) {
+    return this.questionService.getRandom(limit);
+  }
 }

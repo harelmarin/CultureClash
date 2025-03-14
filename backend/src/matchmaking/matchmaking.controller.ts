@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
 import { MatchmakingService } from './matchmaking.service';
 import { CreateMatchmakingDto } from './dto/create-matchmaking.dto';
-import { UpdateMatchmakingDto } from './dto/update-matchmaking.dto';
+
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +9,7 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { EndGameDto } from './dto/end-game.dto';
 
 @ApiTags('matchmaking')
 @Controller('matchmaking')
@@ -41,15 +42,15 @@ export class MatchmakingController {
     return this.matchmakingService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Récupérer une session de matchmaking par ID' })
-  @ApiResponse({ status: 200, description: 'Session de matchmaking trouvée.' })
+  @Patch()
+  @ApiOperation({ summary: 'Update la session de matchmaking à la fin' })
   @ApiResponse({
-    status: 404,
-    description: 'Session de matchmaking non trouvée.',
+    status: 201,
+    description: 'Session de matchmaking udpate avec succès.',
   })
-  @ApiParam({ name: 'id', description: 'ID de la session de matchmaking' })
-  findOne(@Param('id') id: string) {
-    return this.matchmakingService.findOne(id);
+  @ApiResponse({ status: 400, description: 'Données invalides.' })
+  @ApiBody({ type: EndGameDto })
+  endgame(@Body() endgameDto: EndGameDto) {
+    return this.matchmakingService.endgame(endgameDto);
   }
 }

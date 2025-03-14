@@ -1,4 +1,5 @@
 import {
+  Body,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -6,6 +7,9 @@ import {
 } from '@nestjs/common';
 import { User, UserWithoutPassword } from './entities/user.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { LoginDto } from 'src/auth/dto/login.dto';
+import { register } from 'node:module';
+import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
@@ -64,6 +68,21 @@ export class UserService {
       const user = await this.prisma.user.delete({
         where: {
           username: name,
+        },
+      });
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async create(@Body() registerDto: RegisterDto): Promise<UserWithoutPassword> {
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          username: registerDto.username,
+          email: registerDto.email,
+          password: registerDto.password,
         },
       });
       return user;
