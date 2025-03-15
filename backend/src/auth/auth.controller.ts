@@ -71,7 +71,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(SessionAuthGuard) 
+  @UseGuards(SessionAuthGuard)
   @ApiOperation({
     summary: "Récupérer les informations de l'utilisateur connecté",
   })
