@@ -99,7 +99,7 @@ export const logout = async (): Promise<boolean> => {
 
 export const checkSession = async (): Promise<boolean> => {
   try {
-    const response = await fetch('http://localhost:3000/auth/check-session', {
+    const response = await fetch(`${BASE_URL}/auth/check-session`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -118,7 +118,7 @@ export const checkSession = async (): Promise<boolean> => {
 
 export const getSession = async (): Promise<User | null> => {
   try {
-    const response = await fetch('http://localhost:3000/auth/me', {
+    const response = await fetch(`${BASE_URL}/auth/me`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -136,7 +136,7 @@ export const getSession = async (): Promise<User | null> => {
 
 export const clearSession = async (): Promise<boolean> => {
   try {
-    const response = await fetch('http://localhost:3000/auth/clear-session', {
+    const response = await fetch(`${BASE_URL}/auth/clear-session`, {
       method: 'POST',
       credentials: 'include',
     });
@@ -150,5 +150,22 @@ export const clearSession = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Erreur lors de la destruction de la session:', error);
     return false;
+  }
+};
+
+export const getMe = async (): Promise<User | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/auth/me`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (response.ok) {
+      const user = await response.json();
+      return user;
+    } else {
+      throw new Error('Utilisateur non connecté');
+    }
+  } catch (error) {
+    return null;
   }
 };
