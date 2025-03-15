@@ -9,8 +9,6 @@ export class CreateFriendRequestDto {
   @IsNotEmpty()
   receiverId: string;
 
-  @IsNotEmpty()
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
 }
 
 

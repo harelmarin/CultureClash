@@ -9,22 +9,36 @@ export class FriendRequestService {
 
   constructor(private readonly prismaService: PrismaService) { }
 
-  sendFriendRequest(createFriendRequestDto: CreateFriendRequestDto) {
-    const existingFriendRequest = this.prismaService.friendRequest.findFirst({
+  async sendFriendRequest(createFriendRequestDto: CreateFriendRequestDto) {  // Vérifier que les deux utilisateurs existent
+    const sender = await this.prismaService.user.findUnique({
+      where: { id: createFriendRequestDto.senderId }
+    });
+    const receiver = await this.prismaService.user.findUnique({
+      where: { id: createFriendRequestDto.receiverId }
+    });
+
+    if (!sender) {
+      throw new Error('L\'expéditeur n\'existe pas');
+    }
+
+    if (!receiver) {
+      throw new Error('Le destinataire n\'existe pas');
+    }
+
+    const existingFriendRequest = await this.prismaService.friendRequest.findFirst({
       where: {
         senderId: createFriendRequestDto.senderId,
         receiverId: createFriendRequestDto.receiverId
       }
     });
 
-    if (!existingFriendRequest) {
-      return this.prismaService.friendRequest.create({
-        data: createFriendRequestDto,
-      });
+    if (existingFriendRequest) {
+      throw new Error('Friend request already exists');
     }
 
-    return existingFriendRequest;
-
+    return this.prismaService.friendRequest.create({
+      data: createFriendRequestDto
+    });
   }
 
   async acceptFriendRequest(id: string) {
