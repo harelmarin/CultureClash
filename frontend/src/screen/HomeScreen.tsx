@@ -1,12 +1,19 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { RoomScreenNavigationProp } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
-
-export function HomeScreen({ navigation }: Props) {
+const HomeScreen = () => {
+  const navigation = useNavigation<RoomScreenNavigationProp>();
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -22,7 +29,7 @@ export function HomeScreen({ navigation }: Props) {
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -65,4 +72,5 @@ const styles = StyleSheet.create({
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
     textAlign: 'center',
   },
-}); 
+});
+export default HomeScreen;

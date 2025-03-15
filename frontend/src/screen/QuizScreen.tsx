@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
+import { useNavigation } from '@react-navigation/native';
+import { RoomScreenNavigationProp } from '../types/navigation';
 
 type Question = {
   id: string;
@@ -16,17 +23,16 @@ type Question = {
   }[];
 };
 
-export function QuizScreen({ navigation }: Props) {
+const QuizScreen = () => {
+  const navigation = useNavigation<RoomScreenNavigationProp>();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simuler le chargement des questions depuis l'API
     const loadQuestions = async () => {
       try {
-        // Simule un appel API
         const mockQuestions = [
           {
             id: '1',
@@ -100,7 +106,7 @@ export function QuizScreen({ navigation }: Props) {
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -166,4 +172,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
   },
-}); 
+});
+export default QuizScreen;

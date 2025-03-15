@@ -23,4 +23,4 @@
 /frontend/*.pem
 /frontend/.env*.local
 /frontend/*.tsbuildinfo
-
+/frontend/.env

@@ -1,12 +1,19 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
-
-export function ResultScreen({ navigation, route }: Props) {
+const ResultScreen = ({
+  route,
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Result'>) => {
   const { score } = route.params;
 
   return (
@@ -16,7 +23,11 @@ export function ResultScreen({ navigation, route }: Props) {
         <Text style={styles.score}>{score}</Text>
 
         <Text style={styles.message}>
-          {score > 7 ? 'Excellent !' : score > 4 ? 'Bien joué !' : 'Continuez à vous entraîner !'}
+          {score > 7
+            ? 'Excellent !'
+            : score > 4
+            ? 'Bien joué !'
+            : 'Continuez à vous entraîner !'}
         </Text>
 
         <TouchableOpacity
@@ -28,7 +39,7 @@ export function ResultScreen({ navigation, route }: Props) {
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -84,4 +95,5 @@ const styles = StyleSheet.create({
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
     textAlign: 'center',
   },
-}); 
+});
+export default ResultScreen;

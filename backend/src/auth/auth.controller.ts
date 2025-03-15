@@ -71,7 +71,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(SessionAuthGuard)
+  @UseGuards(SessionAuthGuard) 
   @ApiOperation({
     summary: "Récupérer les informations de l'utilisateur connecté",
   })
@@ -86,5 +86,49 @@ export class AuthController {
       throw new UnauthorizedException('Utilisateur non authentifié');
     }
     return req.session.user;
+  }
+
+  @Get('refresh-session')
+  async refreshSession(@Request() req, @Res() res) {
+    if (!req.session || !req.session.user) {
+      throw new UnauthorizedException('Session expirée');
+    }
+    req.session.touch();
+
+    res.json({ message: 'Session rafraîchie', user: req.session.user });
+  }
+
+  @Get('check-session')
+  @UseGuards(SessionAuthGuard)
+  @ApiOperation({ summary: "Vérifier si l'utilisateur est connecté" })
+  @ApiResponse({
+    status: 200,
+    description: 'Session valide',
+    type: UserWithoutPassword,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Session expirée ou utilisateur non connecté',
+  })
+  async checkSession(@Request() req) {
+    if (!req.session.user) {
+      throw new UnauthorizedException('Session expirée');
+    }
+    return req.session.user;
+  }
+
+  @Post('clear-session')
+  @ApiOperation({ summary: "Effacer la session de l'utilisateur" })
+  @ApiResponse({ status: 200, description: 'Session effacée avec succès' })
+  @ApiResponse({ status: 500, description: 'Erreur serveur' })
+  async clearSession(@Request() req, @Res() res) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Erreur lors de la destruction de la session:', err);
+        return res.status(500).json({ message: 'Erreur serveur' });
+      }
+      res.clearCookie('connect.sid');
+      return res.json({ message: 'Session effacée' });
+    });
   }
 }

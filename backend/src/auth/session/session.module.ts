@@ -37,6 +37,7 @@ export class SessionModule implements NestModule {
           saveUninitialized: false,
           cookie: {
             httpOnly: true,
+            sameSite: 'lax',
             secure: 'auto',
             maxAge: 1000 * 60 * 60 * 24,
           },

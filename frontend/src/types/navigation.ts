@@ -1,10 +1,15 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
   Home: undefined;
   Room: undefined;
   Quiz: { roomId: string };
-  Result: undefined;
+  Result: { score: number };
 };
 
-export type RoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Room">; 
+export type RoomScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Room'
+>;
