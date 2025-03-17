@@ -1,6 +1,7 @@
 import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UserWithoutPassword } from './entities/user.entity';
 
 @ApiTags('user')
 @Controller('user')
@@ -44,6 +45,21 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
   async findbyUsername(@Param('name') name: string) {
     const user = await this.userService.findbyUsername(name);
+
+    if (!user) {
+      return {
+        message: `Utilisateur ${name} non trouvé`,
+      };
+    }
+    return user;
+  }
+
+  @Get('usernamev2/:name')
+  @ApiOperation({ summary: 'Récupérer un utilisateur par username' })
+  @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async findbyUsernameWiithoutPassword(@Param('name') name: string) {
+    const user = await this.userService.findbyUsernameWithoutPassword(name);
 
     if (!user) {
       return {

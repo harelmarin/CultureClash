@@ -6,44 +6,44 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FriendRequestService {
+  constructor(private readonly prismaService: PrismaService) {}
 
-  constructor(private readonly prismaService: PrismaService) { }
-
-  async sendFriendRequest(createFriendRequestDto: CreateFriendRequestDto) {  // Vérifier que les deux utilisateurs existent
+  async sendFriendRequest(createFriendRequestDto: CreateFriendRequestDto) {
     const sender = await this.prismaService.user.findUnique({
-      where: { id: createFriendRequestDto.senderId }
+      where: { id: createFriendRequestDto.senderId },
     });
     const receiver = await this.prismaService.user.findUnique({
-      where: { id: createFriendRequestDto.receiverId }
+      where: { id: createFriendRequestDto.receiverId },
     });
 
     if (!sender) {
-      throw new Error('L\'expéditeur n\'existe pas');
+      throw new Error("L'expéditeur n'existe pas");
     }
 
     if (!receiver) {
-      throw new Error('Le destinataire n\'existe pas');
+      throw new Error("Le destinataire n'existe pas");
     }
 
-    const existingFriendRequest = await this.prismaService.friendRequest.findFirst({
-      where: {
-        senderId: createFriendRequestDto.senderId,
-        receiverId: createFriendRequestDto.receiverId
-      }
-    });
+    const existingFriendRequest =
+      await this.prismaService.friendRequest.findFirst({
+        where: {
+          senderId: createFriendRequestDto.senderId,
+          receiverId: createFriendRequestDto.receiverId,
+        },
+      });
 
     if (existingFriendRequest) {
       throw new Error('Friend request already exists');
     }
 
     return this.prismaService.friendRequest.create({
-      data: createFriendRequestDto
+      data: createFriendRequestDto,
     });
   }
 
   async acceptFriendRequest(id: string) {
     const friendRequest = await this.prismaService.friendRequest.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!friendRequest) {
@@ -53,34 +53,34 @@ export class FriendRequestService {
     await this.prismaService.friendRequest.update({
       where: { id },
       data: { status: 'ACCEPTED' },
-      include: { sender: true, receiver: true }
+      include: { sender: true, receiver: true },
     });
-
 
     await this.prismaService.follows.createMany({
       data: [
         {
           followingUserId: friendRequest.senderId,
           followedUserId: friendRequest.receiverId,
-          status: 'ACCEPTED'
+          status: 'ACCEPTED',
         },
         {
           followingUserId: friendRequest.receiverId,
           followedUserId: friendRequest.senderId,
-          status: 'ACCEPTED'
-        }
+          status: 'ACCEPTED',
+        },
       ],
-      skipDuplicates: true
+      skipDuplicates: true,
     });
 
-    return { message: 'Friend request accepted and follow relationship created' };
+    return {
+      message: 'Friend request accepted and follow relationship created',
+    };
   }
-
 
   rejectFriendRequest(id: string) {
     return this.prismaService.friendRequest.update({
       where: { id },
-      data: { status: 'REJECTED' }
+      data: { status: 'REJECTED' },
     });
   }
 
@@ -88,9 +88,8 @@ export class FriendRequestService {
     return this.prismaService.friendRequest.findMany({
       where: {
         receiverId,
-        status: 'PENDING'
-      }
+        status: 'PENDING',
+      },
     });
   }
-
 }

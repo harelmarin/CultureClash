@@ -13,7 +13,7 @@ import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async findAll(): Promise<User[]> {
     try {
@@ -44,7 +44,29 @@ export class UserService {
           username: name,
         },
       });
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
 
+  async findbyUsernameWithoutPassword(
+    name: string,
+  ): Promise<UserWithoutPassword> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          username: name,
+        },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          profilePic: true,
+          createdAt: true,
+          points: true,
+        },
+      });
       return user;
     } catch (error) {
       throw new InternalServerErrorException(error);

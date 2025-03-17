@@ -55,7 +55,6 @@ export class AuthService {
     username: string,
     password: string,
   ): Promise<UserWithoutPassword> {
-    // Vérifie si l'utilisateur existe dans la base de données
     const userbyUsername = await this.userService.findbyUsername(username);
     if (!userbyUsername) {
       throw new ConflictException('Utilisateur non trouvé');

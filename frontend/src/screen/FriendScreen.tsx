@@ -1,20 +1,20 @@
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-import { useState } from "react";
-import { findFriendByUsername } from "../services/friendService";
-import { User } from "../types/userTypes";
-import { useAuth } from "../contexts/authContext";
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { findFriendByUsername } from '../services/friendService';
+import { User } from '../types/userTypes';
+import { useAuth } from '../contexts/authContext';
 
 const FriendScreen = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const searchFriend = async () => {
-    if (username.trim() !== "") {
+    if (username.trim() !== '') {
       const result = await findFriendByUsername(username);
       if (result === false) {
-        setError("Utilisateur non trouvé");
+        setError('Utilisateur non trouvé');
         setFoundUser(null);
       } else {
         setFoundUser(result as User);
@@ -34,7 +34,7 @@ const FriendScreen = () => {
         },
         body: JSON.stringify({
           senderId: user.id,
-          receiverId: foundUser.id
+          receiverId: foundUser.id,
         }),
       });
 
@@ -45,7 +45,7 @@ const FriendScreen = () => {
         setError("Erreur lors de l'envoi de la demande d'ami");
       }
     } catch (err) {
-      setError("Erreur de connexion au serveur");
+      setError('Erreur de connexion au serveur');
     }
   };
 
@@ -67,6 +67,7 @@ const FriendScreen = () => {
         <View style={styles.userCard}>
           <Text style={styles.username}>{foundUser.username}</Text>
           <Text style={styles.email}>{foundUser.email}</Text>
+
           <Button
             title="Ajouter en ami"
             onPress={sendFriendRequest}
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: "gray",
+    borderColor: 'gray',
     borderWidth: 1,
     marginTop: 10,
     paddingHorizontal: 8,

@@ -1,11 +1,13 @@
-import { User } from "../types/userTypes";
+import { User } from '../types/userTypes';
 
 const BASE_URL = 'http://localhost:3000';
 
-export const findFriendByUsername = async (username: string): Promise<User | boolean> => {
-  console.log('Recherche de l\'ami:', username);
+export const findFriendByUsername = async (
+  username: string,
+): Promise<User | boolean> => {
+  console.log("Recherche de l'ami:", username);
   try {
-    const friends = await fetch(`${BASE_URL}/user/username/${username}`, {
+    const friends = await fetch(`${BASE_URL}/user/usernamev2/${username}`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -22,4 +24,4 @@ export const findFriendByUsername = async (username: string): Promise<User | boo
     console.error('Erreur lors de la récupération des amis:', error);
     return false;
   }
-}
+};
