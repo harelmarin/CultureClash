@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { findFriendByUsername } from '../services/friendService';
 import { User } from '../types/userTypes';
 import { useAuth } from '../contexts/authContext';
+import { FriendRequests } from '../components/FriendRequests';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
@@ -22,6 +23,14 @@ const FriendScreen = () => {
       }
     }
   };
+
+  if (foundUser?.id === user?.id) {
+    return (
+      <View>
+        <Text>Impossible d'ajouter ce joueur en ami</Text>
+      </View>
+    );
+  }
 
   const sendFriendRequest = async () => {
     if (!foundUser || !user) return;
@@ -51,7 +60,7 @@ const FriendScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Rechercher un ami</Text>
+      <Text style={styles.title}>Rechercher un joueur</Text>
       <TextInput
         placeholder="Entrez un nom d'utilisateur"
         value={username}
@@ -75,6 +84,8 @@ const FriendScreen = () => {
           />
         </View>
       )}
+
+      <FriendRequests />
     </View>
   );
 };
