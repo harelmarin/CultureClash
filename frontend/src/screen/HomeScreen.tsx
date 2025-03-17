@@ -28,6 +28,14 @@ const HomeScreen = () => {
           <Text style={styles.logoutText}>Déconnexion</Text>
         </TouchableOpacity>
       </View>
+      <View>
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() => navigation.navigate('Friend')}
+        >
+          <Text style={styles.startButtonText}>Social</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.container}>
         <View style={styles.logoContainer}>

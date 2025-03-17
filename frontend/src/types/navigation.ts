@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Room: undefined;
   Login: undefined;
   Register: undefined;
+  Friend: undefined;
   Quiz: { roomId: string; matchmaking: any };
   Result: {
     score: number;

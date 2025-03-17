@@ -1,7 +1,8 @@
-export type User = {
+export interface User {
   id: string;
   username: string;
+  email: string;
   points: number;
-  profilePic: string;
+  profilePic?: string;
   createdAt: Date;
-};
+}
