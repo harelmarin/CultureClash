@@ -5,17 +5,21 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { io } from 'socket.io-client';
 import { useNavigation } from '@react-navigation/native';
 import { RoomScreenNavigationProp } from '../types/navigation';
+import { useAuth } from '../contexts/authContext';
 
 const socket = io('http://localhost:3000', {
   transports: ['websocket', 'polling'],
+  withCredentials: true,
 });
 
 const RoomScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
+  const { user } = useAuth();
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isPlayer1, setIsPlayer1] = useState<boolean | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
@@ -54,6 +58,11 @@ const RoomScreen = () => {
   useEffect(() => {
     socket.on('connect', () => {
       console.log('✅ Connecté au WebSocket :', socket.id);
+
+      if (user && user.id) {
+        socket.emit('authenticate', { userId: user.id });
+        console.log('🔐 Authentification socket avec userId:', user.id);
+      }
     });
 
     socket.on('matchFound', (data) => {
@@ -75,7 +84,10 @@ const RoomScreen = () => {
       }
 
       if (data.roomId) {
-        navigation.navigate('Quiz', { roomId: data.roomId });
+        navigation.navigate('Quiz', {
+          roomId: data.roomId,
+          matchmaking: data.matchmaking,
+        });
       }
     });
 
@@ -110,12 +122,22 @@ const RoomScreen = () => {
         clearInterval(countdownRef.current);
       }
     };
-  }, [navigation]);
+  }, [navigation, user]);
 
   const joinQueue = () => {
-    socket.emit('joinQueue');
-    setIsInQueue(true);
-    console.log("📥 Demande d'entrée dans la file d'attente...");
+    if (user && user.id) {
+      socket.emit('joinQueue', { userId: user.id });
+      setIsInQueue(true);
+      console.log(
+        `📥 Demande d'entrée dans la file d'attente avec userId: ${user.id}`,
+      );
+    } else {
+      Alert.alert(
+        'Non connecté',
+        'Vous devez être connecté pour rejoindre une partie',
+        [{ text: 'OK' }],
+      );
+    }
   };
 
   const leaveQueue = () => {

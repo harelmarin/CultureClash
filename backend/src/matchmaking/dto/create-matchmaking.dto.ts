@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMatchmakingDto {
@@ -7,7 +7,7 @@ export class CreateMatchmakingDto {
     type: String,
     example: '15688eb8-c43e-4f9b-92bf-0d4ae60232f5',
   })
-  @IsString()
+  @IsUUID()
   playerOneId: string;
 
   @ApiProperty({
@@ -15,6 +15,6 @@ export class CreateMatchmakingDto {
     type: String,
     example: '4ff74b1e-8101-486d-853c-45d4db14a750',
   })
-  @IsString()
+  @IsUUID()
   playerTwoId: string;
 }

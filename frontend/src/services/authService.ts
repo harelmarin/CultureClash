@@ -11,7 +11,6 @@ export const refreshSession = async (): Promise<boolean> => {
     });
 
     if (response.ok) {
-      console.log('Session refresh avec succès');
       return true;
     }
 

@@ -13,6 +13,13 @@ const MainNavigator = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="Room" component={RoomScreen} />
+      <Stack.Screen
+        name="Result"
+        component={ResultScreen as React.ComponentType<{}>}
+        options={{
+          headerShown: true,
+        }}
+      />
     </Stack.Navigator>
   );
 };
