@@ -4,6 +4,7 @@ import { findFriendByUsername } from '../services/friendService';
 import { User } from '../types/userTypes';
 import { useAuth } from '../contexts/authContext';
 import { FriendRequests } from '../components/FriendRequests';
+import FriendListe from '../components/FriendListe';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
@@ -17,6 +18,7 @@ const FriendScreen = () => {
       if (result === false) {
         setError('Utilisateur non trouvé');
         setFoundUser(null);
+        console.log("Utilisateur non trouvé");
       } else {
         setFoundUser(result as User);
         setError(null);
@@ -70,7 +72,11 @@ const FriendScreen = () => {
       />
       <Button title="Rechercher" onPress={searchFriend} />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
 
       {foundUser && (
         <View style={styles.userCard}>
@@ -86,6 +92,7 @@ const FriendScreen = () => {
       )}
 
       <FriendRequests />
+      <FriendListe />
     </View>
   );
 };
@@ -127,9 +134,18 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 10,
   },
-  error: {
-    color: 'red',
-    marginTop: 10,
+  errorContainer: {
+    backgroundColor: '#fee2e2',
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 

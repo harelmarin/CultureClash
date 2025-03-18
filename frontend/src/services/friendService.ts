@@ -16,9 +16,13 @@ export const findFriendByUsername = async (
       },
     });
 
+    console.log("Statut de la réponse:", friends.status);
     if (friends.ok) {
-      return (await friends.json()) as User;
+      const userData = await friends.json();
+      console.log("Utilisateur trouvé:", userData);
+      return userData as User;
     } else {
+      console.log("Utilisateur non trouvé, statut:", friends.status);
       return false;
     }
   } catch (error) {
@@ -133,9 +137,18 @@ export const getUserById = async (userId: string): Promise<User | null> => {
   }
 };
 
+interface Follow {
+  id: string;
+  followingUserId: string;
+  followedUserId: string;
+  status: string;
+  createdAt: string;
+  followedUser: User;
+}
+
 export const getFriendsList = async (userId: string): Promise<User[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/user/${userId}/friends`, {
+    const response = await fetch(`${BASE_URL}/follow/${userId}/followers`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -144,7 +157,19 @@ export const getFriendsList = async (userId: string): Promise<User[]> => {
     });
 
     if (response.ok) {
-      return await response.json();
+      const follows = await response.json();
+      console.log("Relations d'amitié reçues:", follows);
+
+      // Récupérer les informations de chaque utilisateur suivi
+      const friendsPromises = follows.map(async (follow: Follow) => {
+        const user = await getUserById(follow.followedUserId);
+        console.log("Utilisateur récupéré:", user);
+        return user;
+      });
+
+      const friends = await Promise.all(friendsPromises);
+      // Filtrer les utilisateurs null
+      return friends.filter((friend): friend is User => friend !== null);
     }
     return [];
   } catch (error) {

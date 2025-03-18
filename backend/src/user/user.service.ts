@@ -13,7 +13,7 @@ import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(): Promise<User[]> {
     try {
@@ -67,8 +67,16 @@ export class UserService {
           points: true,
         },
       });
+
+      if (!user) {
+        throw new NotFoundException(`Utilisateur ${name} non trouvé`);
+      }
+
       return user;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException(error);
     }
   }

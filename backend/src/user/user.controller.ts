@@ -6,7 +6,7 @@ import { UserWithoutPassword } from './entities/user.entity';
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les utilisateurs' })
@@ -39,6 +39,8 @@ export class UserController {
     return user;
   }
 
+
+
   @Get('username/:name')
   @ApiOperation({ summary: 'Récupérer un utilisateur par username' })
   @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
@@ -59,14 +61,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
   async findbyUsernameWiithoutPassword(@Param('name') name: string) {
-    const user = await this.userService.findbyUsernameWithoutPassword(name);
-
-    if (!user) {
-      return {
-        message: `Utilisateur ${name} non trouvé`,
-      };
-    }
-    return user;
+    return this.userService.findbyUsernameWithoutPassword(name);
   }
 
   @Get('email/:email')

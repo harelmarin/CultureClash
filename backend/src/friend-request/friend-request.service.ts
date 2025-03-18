@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FriendRequestService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async sendFriendRequest(createFriendRequestDto: CreateFriendRequestDto) {
     const sender = await this.prismaService.user.findUnique({
@@ -22,6 +22,17 @@ export class FriendRequestService {
 
     if (!receiver) {
       throw new Error("Le destinataire n'existe pas");
+    }
+
+    const existingFollows = await this.prismaService.follows.findMany({
+      where: {
+        followingUserId: createFriendRequestDto.senderId,
+        followedUserId: createFriendRequestDto.receiverId,
+      },
+    });
+
+    if (existingFollows.length > 0) {
+      throw new Error('Follow relationship already exists');
     }
 
     const existingFriendRequest =
@@ -48,6 +59,17 @@ export class FriendRequestService {
 
     if (!friendRequest) {
       throw new Error('Friend request not found');
+    }
+
+    const existingFollows = await this.prismaService.follows.findMany({
+      where: {
+        followingUserId: friendRequest.senderId,
+        followedUserId: friendRequest.receiverId,
+      },
+    });
+
+    if (existingFollows.length > 0) {
+      throw new Error('Follow relationship already exists');
     }
 
     await this.prismaService.friendRequest.update({
