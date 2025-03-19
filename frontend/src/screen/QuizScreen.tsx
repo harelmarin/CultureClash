@@ -8,10 +8,9 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
-import { useNavigation } from '@react-navigation/native';
-import { RoomScreenNavigationProp } from '../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type Question = {
   id: string;
@@ -23,39 +22,26 @@ type Question = {
   }[];
 };
 
+type QuizScreenRouteProp = RouteProp<RootStackParamList, 'Quiz'>;
+type QuizScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Quiz'
+>;
+
 const QuizScreen = () => {
-  const navigation = useNavigation<RoomScreenNavigationProp>();
+  const route = useRoute<QuizScreenRouteProp>();
+  const { roomId, matchmaking } = route.params;
+  const navigation = useNavigation<QuizScreenNavigationProp>();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>(
+    matchmaking?.questions || [],
+  );
+  const [loading, setLoading] = useState(!matchmaking?.questions?.length);
 
   useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        const mockQuestions = [
-          {
-            id: '1',
-            text: 'Quelle est la capitale de la France ?',
-            choices: [
-              { id: '1', text: 'Paris', isCorrect: true },
-              { id: '2', text: 'Londres', isCorrect: false },
-              { id: '3', text: 'Berlin', isCorrect: false },
-              { id: '4', text: 'Madrid', isCorrect: false },
-            ],
-          },
-          // Ajoutez plus de questions ici
-        ];
-        setQuestions(mockQuestions);
-      } catch (error) {
-        console.error('Error loading questions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuestions();
-  }, []);
+    console.log('❓ Questions :', questions);
+  }, [matchmaking]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
@@ -173,4 +159,5 @@ const styles = StyleSheet.create({
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
   },
 });
+
 export default QuizScreen;

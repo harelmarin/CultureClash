@@ -144,17 +144,15 @@ export class MyGateway implements OnModuleInit {
         player1.join(roomId);
         player2.join(roomId);
 
-        // Créer une nouvelle demande de match
         const matchRequest: MatchRequest = {
           roomId,
           players: [player1, player2],
           acceptedPlayers: new Set(),
-          timer: setTimeout(() => this.handleMatchTimeout(roomId), 15000), // 15 secondes pour accepter
+          timer: setTimeout(() => this.handleMatchTimeout(roomId), 15000),
         };
 
         this.matchRequests.set(roomId, matchRequest);
 
-        // Notifier les joueurs
         this.server.to(roomId).emit('matchFound', {
           roomId,
           players: [player1.id, player2.id],
@@ -178,12 +176,10 @@ export class MyGateway implements OnModuleInit {
     matchRequest.acceptedPlayers.add(client.id);
     console.log(`✅ Le joueur ${client.id} a accepté le match`);
 
-    // Vérifier si tous les joueurs ont accepté
     if (matchRequest.acceptedPlayers.size === matchRequest.players.length) {
       clearTimeout(matchRequest.timer);
 
       try {
-        // Get user IDs from socket data
         const player1UserId = matchRequest.players[0].data?.userId;
         const player2UserId = matchRequest.players[1].data?.userId;
 
