@@ -3,6 +3,8 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import * as MySQLStore from 'express-mysql-session';
 import { createPool } from 'mysql2';
+import { SessionService } from './session.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 const MySQLStore = require('express-mysql-session')(session);
 
@@ -25,7 +27,10 @@ const sessionStore = new MySQLStore(
   pool,
 );
 
-@Module({})
+@Module({
+  providers: [SessionService, PrismaService],
+  exports: [SessionService],
+})
 export class SessionModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer

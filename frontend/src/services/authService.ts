@@ -3,10 +3,21 @@ import { User } from '../types/userTypes';
 
 const BASE_URL = 'http://localhost:3000';
 
+// Générer un identifiant unique pour la session
+const generateSessionId = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+// Stocker l'identifiant de session
+let currentSessionId: string | null = null;
+
 export const refreshSession = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh-session`, {
       method: 'GET',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
 
@@ -55,10 +66,12 @@ export const register = async (
 
 export const login = async (loginData: LoginData): Promise<boolean> => {
   try {
+    currentSessionId = generateSessionId();
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Session-ID': currentSessionId,
       },
       body: JSON.stringify(loginData),
       credentials: 'include',
@@ -83,9 +96,13 @@ export const logout = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/logout`, {
       method: 'POST',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
     if (response.ok) {
+      currentSessionId = null;
       return true;
     } else {
       return false;
@@ -100,6 +117,9 @@ export const checkSession = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/check-session`, {
       method: 'GET',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
 
@@ -119,6 +139,9 @@ export const getSession = async (): Promise<User | null> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/me`, {
       method: 'GET',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
 
@@ -137,10 +160,14 @@ export const clearSession = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/clear-session`, {
       method: 'POST',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
 
     if (response.ok) {
+      currentSessionId = null;
       return true;
     } else {
       console.error("Erreur lors de l'effacement de la session");
@@ -156,6 +183,9 @@ export const getMe = async (): Promise<User | null> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/me`, {
       method: 'GET',
+      headers: {
+        'X-Session-ID': currentSessionId || '',
+      },
       credentials: 'include',
     });
     if (response.ok) {

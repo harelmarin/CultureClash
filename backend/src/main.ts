@@ -16,8 +16,9 @@ async function bootstrap() {
       'http://localhost:8081',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID'],
     credentials: true,
+    exposedHeaders: ['Set-Cookie'],
   });
 
   // Configuration de WebSocket

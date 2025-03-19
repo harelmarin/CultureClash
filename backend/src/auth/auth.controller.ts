@@ -7,6 +7,7 @@ import {
   Request,
   Res,
   UnauthorizedException,
+  Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -15,11 +16,15 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserWithoutPassword } from 'src/user/entities/user.entity';
 import { LocalAuthGuard } from './guards/local.auth.guard';
 import { SessionAuthGuard } from './guards/session.auth.guard';
+import { SessionService } from './session/session.service';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly sessionService: SessionService,
+  ) { }
 
   @Post('register')
   @ApiOperation({ summary: 'Enregistrer un utilisateur' })
@@ -50,8 +55,19 @@ export class AuthController {
     type: UserWithoutPassword,
   })
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
-  async login(@Request() req, @Body() loginDto: LoginDto) {
-    req.session.user = req.user;
+  async login(
+    @Request() req,
+    @Body() loginDto: LoginDto,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (!sessionId) {
+      throw new UnauthorizedException('Session ID manquant');
+    }
+
+    const session = await this.sessionService.createSession(
+      req.user.id,
+      sessionId,
+    );
     return { message: 'Login réussi', user: req.user };
   }
 
@@ -59,7 +75,14 @@ export class AuthController {
   @ApiOperation({ summary: "Déconnexion d'un utilisateur" })
   @ApiResponse({ status: 200, description: 'Déconnexion réussie' })
   @ApiResponse({ status: 500, description: 'Erreur serveur' })
-  async logout(@Request() req, @Res() res) {
+  async logout(
+    @Request() req,
+    @Res() res,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (sessionId) {
+      await this.sessionService.deleteSession(sessionId);
+    }
     req.session.destroy((err) => {
       if (err) {
         console.error('Erreur lors de la destruction de la session:', err);
@@ -81,21 +104,41 @@ export class AuthController {
     type: UserWithoutPassword,
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  getMe(@Request() req) {
-    if (!req.session.user) {
-      throw new UnauthorizedException('Utilisateur non authentifié');
+  async getMe(
+    @Request() req,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (!sessionId) {
+      throw new UnauthorizedException('Session ID manquant');
     }
-    return req.session.user;
+
+    const session = await this.sessionService.getSession(sessionId);
+    if (!session || !session.user) {
+      throw new UnauthorizedException('Session invalide');
+    }
+
+    return session.user;
   }
 
   @Get('refresh-session')
-  async refreshSession(@Request() req, @Res() res) {
-    if (!req.session || !req.session.user) {
-      throw new UnauthorizedException('Session expirée');
+  async refreshSession(
+    @Request() req,
+    @Res() res,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (!sessionId) {
+      throw new UnauthorizedException('Session ID manquant');
     }
+
+    const session = await this.sessionService.getSession(sessionId);
+    if (!session || !session.user) {
+      throw new UnauthorizedException('Session invalide');
+    }
+
+    await this.sessionService.updateSession(sessionId);
     req.session.touch();
 
-    res.json({ message: 'Session rafraîchie', user: req.session.user });
+    res.json({ message: 'Session rafraîchie', user: session.user });
   }
 
   @Get('check-session')
@@ -110,18 +153,34 @@ export class AuthController {
     status: 401,
     description: 'Session expirée ou utilisateur non connecté',
   })
-  async checkSession(@Request() req) {
-    if (!req.session.user) {
-      throw new UnauthorizedException('Session expirée');
+  async checkSession(
+    @Request() req,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (!sessionId) {
+      throw new UnauthorizedException('Session ID manquant');
     }
-    return req.session.user;
+
+    const session = await this.sessionService.getSession(sessionId);
+    if (!session || !session.user) {
+      throw new UnauthorizedException('Session invalide');
+    }
+
+    return session.user;
   }
 
   @Post('clear-session')
   @ApiOperation({ summary: "Effacer la session de l'utilisateur" })
   @ApiResponse({ status: 200, description: 'Session effacée avec succès' })
   @ApiResponse({ status: 500, description: 'Erreur serveur' })
-  async clearSession(@Request() req, @Res() res) {
+  async clearSession(
+    @Request() req,
+    @Res() res,
+    @Headers('x-session-id') sessionId: string,
+  ) {
+    if (sessionId) {
+      await this.sessionService.deleteSession(sessionId);
+    }
     req.session.destroy((err) => {
       if (err) {
         console.error('Erreur lors de la destruction de la session:', err);

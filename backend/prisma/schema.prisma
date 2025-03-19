@@ -21,6 +21,7 @@ model User {
   friendRequestsReceived FriendRequest[] @relation("ReceivedRequests")
   follows                Follows[]       @relation("FollowedUser")
   followedBy             Follows[]       @relation("FollowingUser")
+  sessions               Session[]
 }
 
 model MatchmakingSession {
@@ -75,6 +76,16 @@ model FriendRequest {
   receiver      User           @relation("ReceivedRequests", fields: [receiverId], references: [id])
   status        RequestStatus  @default(PENDING)
   createdAt     DateTime       @default(now())
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum GameStatus {
