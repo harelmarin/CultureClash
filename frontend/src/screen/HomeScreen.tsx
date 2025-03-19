@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { RoomScreenNavigationProp } from '../types/navigation';
 import { useAuth } from '../contexts/authContext';
 import { logout } from '../services/authService';
+import { Ionicons } from '@expo/vector-icons';
 
 const HomeScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
@@ -23,21 +24,13 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Bienvenue, {user?.username}</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Déconnexion</Text>
-        </TouchableOpacity>
-      </View>
-      <View>
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={() => navigation.navigate('Friend')}
-        >
-          <Text style={styles.startButtonText}>Social</Text>
+        <Text style={styles.welcomeText}>Salut, {user?.username} 👋</Text>
+        <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color="#FF4B5C" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.container}>
+      <View style={styles.mainContent}>
         <View style={styles.logoContainer}>
           <Text style={styles.title}>Culture Clash</Text>
           <Text style={styles.subtitle}>Quiz de Culture Générale</Text>
@@ -45,6 +38,7 @@ const HomeScreen = () => {
 
         <View style={styles.gameContainer}>
           <Text style={styles.gameText}>Prêt à tester vos connaissances ?</Text>
+
           <TouchableOpacity
             style={styles.startButton}
             onPress={() => navigation.navigate('Room')}
@@ -52,6 +46,13 @@ const HomeScreen = () => {
             <Text style={styles.startButtonText}>Commencer le Quiz</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() => navigation.navigate('Friend')}
+        >
+          <Ionicons name="people-outline" size={22} color="white" />
+          <Text style={styles.socialButtonText}>Social</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -60,7 +61,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F3F4F6',
   },
   header: {
     flexDirection: 'row',
@@ -68,75 +69,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#D1D5DB',
   },
   welcomeText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 15,
-    backgroundColor: '#FF6B6B',
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
+    color: '#333',
   },
-  container: {
+  iconButton: {
+    padding: 8,
+    backgroundColor: '#FFE4E6',
+    borderRadius: 50,
+  },
+  mainContent: {
     flex: 1,
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingBottom: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   logoContainer: {
+    marginBottom: 40,
     alignItems: 'center',
-    marginTop: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: Platform.select({ ios: '800', android: 'bold' }),
-    color: '#6C63FF',
-    marginBottom: 10,
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#3B82F6',
     textAlign: 'center',
+    marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#666',
+    color: '#4B5563',
     textAlign: 'center',
   },
   gameContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginBottom: 40,
   },
   gameText: {
     fontSize: 20,
     color: '#333',
-    marginBottom: 30,
+    marginBottom: 25,
     textAlign: 'center',
     fontWeight: '500',
   },
   startButton: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#3B82F6',
+    paddingVertical: 14,
     paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 25,
+    borderRadius: 50,
     width: '100%',
     maxWidth: 300,
-    elevation: 3,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   startButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
+    fontWeight: '700',
     textAlign: 'center',
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 50,
+    maxWidth: 250,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  socialButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
 

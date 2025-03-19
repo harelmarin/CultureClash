@@ -242,7 +242,6 @@ export class MyGateway implements OnModuleInit {
     const matchRequest = this.matchRequests.get(roomId);
     if (!matchRequest) return;
 
-    // Notifier les joueurs que le match a expiré
     matchRequest.players.forEach((player) => {
       player.emit('matchTimeout', { roomId });
     });
@@ -251,10 +250,8 @@ export class MyGateway implements OnModuleInit {
   }
 
   private handleDisconnect(socketId: string) {
-    // Vérifier si le joueur déconnecté était dans une demande de match
     for (const [roomId, matchRequest] of this.matchRequests.entries()) {
       if (matchRequest.players.some((player) => player.id === socketId)) {
-        // Notifier l'autre joueur
         matchRequest.players.forEach((player) => {
           if (player.id !== socketId) {
             player.emit('playerLeft', { roomId });
@@ -270,5 +267,65 @@ export class MyGateway implements OnModuleInit {
 
   private removeFromQueue(socketId: string) {
     this.queue = this.queue.filter((socket) => socket.id !== socketId);
+  }
+
+  @SubscribeMessage('endGame')
+  async handleEndGame(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { roomId: string; playerOneScore: number; playerTwoScore: number },
+  ) {
+    const matchRequest = this.matchRequests.get(data.roomId);
+    if (!matchRequest) {
+      client.emit('error', { message: 'Match non trouvé' });
+      return;
+    }
+
+    console.log(`🏆 Fin du match dans la room ${data.roomId}`);
+
+    const player1 = matchRequest.players[0];
+    const player2 = matchRequest.players[1];
+
+    const playerOneId = player1.data?.userId;
+    const playerTwoId = player2.data?.userId;
+
+    if (!playerOneId || !playerTwoId) {
+      client.emit('error', { message: 'User ID introuvable' });
+      return;
+    }
+
+    let winnerId: string;
+    if (data.playerOneScore > data.playerTwoScore) {
+      winnerId = playerOneId;
+    } else if (data.playerTwoScore > data.playerOneScore) {
+      winnerId = playerTwoId;
+    } else {
+      winnerId = '';
+    }
+
+    try {
+      await this.matchmakingService.endgame({
+        ID: data.roomId,
+        playerOneScore: data.playerOneScore,
+        playerTwoScore: data.playerTwoScore,
+        winnerId: winnerId,
+      });
+
+      console.log(
+        `✅ Match sauvegardé avec succès pour la room ${data.roomId}`,
+      );
+
+      this.server.to(data.roomId).emit('gameOver', {
+        winnerId: winnerId || null,
+        playerOneScore: data.playerOneScore,
+        playerTwoScore: data.playerTwoScore,
+        message: winnerId ? `Le joueur ${winnerId} a gagné !` : 'Match nul !',
+      });
+    } catch (error) {
+      console.error('❌ Erreur en sauvegardant le match:', error);
+      client.emit('error', {
+        message: 'Erreur lors de l’enregistrement du match',
+      });
+    }
   }
 }

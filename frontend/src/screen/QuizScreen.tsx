@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -38,18 +38,41 @@ const QuizScreen = () => {
     matchmaking?.questions || [],
   );
   const [loading, setLoading] = useState(!matchmaking?.questions?.length);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     console.log('❓ Questions :', questions);
   }, [matchmaking]);
 
-  const handleAnswer = (isCorrect: boolean) => {
-    if (isCorrect) {
-      setScore(score + 1);
+  useEffect(() => {
+    if (timeLeft > 0) {
+      timerRef.current = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+    } else {
+      handleTimeout();
     }
 
+    return () =>
+      clearTimeout(timerRef.current as unknown as number | undefined);
+  }, [timeLeft]);
+
+  const handleAnswer = async (isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore((prevScore) => prevScore + timeLeft);
+    }
+
+    nextQuestion();
+  };
+
+  const handleTimeout = () => {
+    nextQuestion();
+  };
+
+  const nextQuestion = () => {
+    clearTimeout(timerRef.current as NodeJS.Timeout | undefined);
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setTimeLeft(10);
     } else {
       navigation.navigate('Result', { score });
     }
@@ -70,6 +93,7 @@ const QuizScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
@@ -102,6 +126,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  timer: {
+    fontSize: 18,
+    color: '#ff5555',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   progress: {
     fontSize: 16,
