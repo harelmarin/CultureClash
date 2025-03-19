@@ -1,5 +1,18 @@
 import { User } from '../types/userTypes';
 import { Request } from '../types/requestTypes';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { apiClient } from './apiclient';
+import { get } from 'http';
+
+
+export interface Follow {
+  id: string;
+  followingUserId: string;
+  followedUserId: string;
+  status: string;
+  createdAt: string;
+  followedUser: User;
+}
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -58,39 +71,6 @@ export const getPendingRequests = async (userId: string): Promise<Request[]> => 
   }
 }
 
-export const acceptRequest = async (requestId: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${BASE_URL}/friend-request/${requestId}/accept`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return response.ok;
-  } catch (error) {
-    console.error("Erreur lors de l'acceptation de la demande:", error);
-    return false;
-  }
-};
-
-export const rejectRequest = async (requestId: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${BASE_URL}/friend-request/${requestId}/reject`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return response.ok;
-  } catch (error) {
-    console.error("Erreur lors du rejet de la demande:", error);
-    return false;
-  }
-};
 
 export const sendFriendRequest = async (senderId: string, receiverId: string): Promise<boolean> => {
   try {
@@ -137,43 +117,71 @@ export const getUserById = async (userId: string): Promise<User | null> => {
   }
 };
 
-interface Follow {
-  id: string;
-  followingUserId: string;
-  followedUserId: string;
-  status: string;
-  createdAt: string;
-  followedUser: User;
-}
+export const FriendFetchService = {
+  acceptRequest: async (requestId: string) => {
+    return apiClient<{ message: string }>('/friend-request/' + requestId + '/accept')
+  },
 
-export const getFriendsList = async (userId: string): Promise<User[]> => {
-  try {
-    const response = await fetch(`${BASE_URL}/follow/${userId}/followers`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  rejectRequest: async (requestId: string) => {
+    return apiClient<{ message: string }>('/friend-request/' + requestId + '/reject')
+  },
 
-    if (response.ok) {
-      const follows = await response.json();
-      console.log("Relations d'amitié reçues:", follows);
+  getFriendsList: async (userId: string) => {
+    return apiClient<Follow[]>('/follow/' + userId + '/followers')
+  }
+};
 
-      // Récupérer les informations de chaque utilisateur suivi
-      const friendsPromises = follows.map(async (follow: Follow) => {
-        const user = await getUserById(follow.followedUserId);
-        console.log("Utilisateur récupéré:", user);
-        return user;
+
+export const FriendService = {
+  getFriendsList: async (userId: string): Promise<Follow[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/follow/${userId}/followers`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      const friends = await Promise.all(friendsPromises);
-      // Filtrer les utilisateurs null
-      return friends.filter((friend): friend is User => friend !== null);
+      if (response.ok) {
+        return await response.json();
+      }
+      return [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la liste d\'amis:', error);
+      return [];
     }
-    return [];
-  } catch (error) {
-    console.error('Erreur lors de la récupération de la liste d\'amis:', error);
-    return [];
+  },
+
+  acceptRequest: async (requestId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${BASE_URL}/friend-request/${requestId}/accept`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error("Erreur lors de l'acceptation de la demande:", error);
+      return false;
+    }
+  },
+
+  rejectRequest: async (requestId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${BASE_URL}/friend-request/${requestId}/reject`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error("Erreur lors du rejet de la demande:", error);
+      return false;
+    }
   }
 };

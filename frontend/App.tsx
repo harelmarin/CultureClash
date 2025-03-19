@@ -9,14 +9,19 @@ import {
 import { AuthNavigator } from './src/navigator/authNavigator';
 import { MainNavigator } from './src/navigator/mainNavigator';
 import { AuthProvider, useAuth } from './src/contexts/authContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <AuthProvider>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <AppContent />
-      </SafeAreaProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <AppContent />
+        </SafeAreaProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

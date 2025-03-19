@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Request } from '../types/requestTypes';
 import { User } from '../types/userTypes';
-import { acceptRequest, rejectRequest } from '../services/friendService';
+import { useAcceptFriendRequest, useRejectFriendRequest } from '../hooks/useFriends';
 
 interface FriendRequestCardProps {
   request: Request & { sender?: User };
@@ -9,13 +9,16 @@ interface FriendRequestCardProps {
 }
 
 export const FriendRequestCard = ({ request, onRequestHandled }: FriendRequestCardProps) => {
+  const acceptMutation = useAcceptFriendRequest();
+  const rejectMutation = useRejectFriendRequest();
+
   const handleAccept = async () => {
-    await acceptRequest(request.id);
+    await acceptMutation.mutateAsync(request.id);
     onRequestHandled();
   };
 
   const handleReject = async () => {
-    await rejectRequest(request.id);
+    await rejectMutation.mutateAsync(request.id);
     onRequestHandled();
   };
 
@@ -29,14 +32,20 @@ export const FriendRequestCard = ({ request, onRequestHandled }: FriendRequestCa
         <TouchableOpacity
           style={[styles.button, styles.acceptButton]}
           onPress={handleAccept}
+          disabled={acceptMutation.isPending}
         >
-          <Text style={styles.buttonText}>Accepter</Text>
+          <Text style={styles.buttonText}>
+            {acceptMutation.isPending ? 'En cours...' : 'Accepter'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.rejectButton]}
           onPress={handleReject}
+          disabled={rejectMutation.isPending}
         >
-          <Text style={styles.buttonText}>Refuser</Text>
+          <Text style={styles.buttonText}>
+            {rejectMutation.isPending ? 'En cours...' : 'Refuser'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

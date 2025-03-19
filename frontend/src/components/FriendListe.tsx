@@ -1,50 +1,35 @@
 import { View, Text, StyleSheet } from "react-native";
-import { getFriendsList } from "../services/friendService";
-import { useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "../contexts/authContext";
-import { User } from "../types/userTypes";
-import { useState } from "react";
+import { useFriendsList } from "../hooks/useFriends";
 
 const FriendListe = () => {
-  const [friendsList, setFriendsList] = useState<User[]>([]);
   const { user } = useAuth();
+  const { data: friendsList = [], isLoading, error } = useFriendsList(user?.id || '');
 
-  const fetchFriendsList = useCallback(async () => {
-    if (!user) return;
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Chargement...</Text>
+      </View>
+    );
+  }
 
-    try {
-      console.log("Fetching friends for user:", user.id);
-      const friends = await getFriendsList(user.id);
-      console.log("Friends list:", friends);
-      // Filtrer les amis undefined ou null
-      const validFriends = friends.filter(friend => friend && friend.username);
-      console.log("Valid friends:", validFriends);
-      setFriendsList(validFriends);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des amis:", error);
-    }
-  }, [user?.id]);
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>Erreur lors du chargement des amis</Text>
+      </View>
+    );
+  }
 
-  useEffect(() => {
-    fetchFriendsList();
-  }, [fetchFriendsList]);
-
-  const renderedList = useMemo(() => (
-    friendsList.map((friend) => {
-      if (!friend || !friend.username) {
-        console.log("Friend invalide:", friend);
-        return null;
-      }
-      return (
-        <View key={friend.id} style={styles.friendCard}>
-          <View style={styles.friendInfo}>
-            <Text style={styles.username}>{friend.username}</Text>
-            <Text style={styles.points}>Points: {friend.points || 0}</Text>
-          </View>
-        </View>
-      );
-    }).filter(Boolean)
-  ), [friendsList]);
+  const renderedList = friendsList.map((follow) => (
+    <View key={follow.id} style={styles.friendCard}>
+      <View style={styles.friendInfo}>
+        <Text style={styles.username}>{follow.followedUser.username}</Text>
+        <Text style={styles.points}>Points: {follow.followedUser.points || 0}</Text>
+      </View>
+    </View>
+  ));
 
   return (
     <View style={styles.container}>
@@ -74,6 +59,11 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 20,
     letterSpacing: 0.5,
+  },
+  error: {
+    color: '#ef4444',
+    textAlign: 'center',
+    fontSize: 16,
   },
   noFriends: {
     textAlign: 'center',
