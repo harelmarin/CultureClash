@@ -72,11 +72,10 @@ export class FriendRequestService {
       throw new Error('Follow relationship already exists');
     }
 
-    await this.prismaService.friendRequest.update({
-      where: { id },
-      data: { status: 'ACCEPTED' },
-      include: { sender: true, receiver: true },
+    await this.prismaService.friendRequest.delete({
+      where: { id }
     });
+
 
     await this.prismaService.follows.createMany({
       data: [
@@ -100,9 +99,8 @@ export class FriendRequestService {
   }
 
   rejectFriendRequest(id: string) {
-    return this.prismaService.friendRequest.update({
-      where: { id },
-      data: { status: 'REJECTED' },
+    return this.prismaService.friendRequest.delete({
+      where: { id }
     });
   }
 
