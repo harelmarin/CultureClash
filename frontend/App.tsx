@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -10,6 +9,7 @@ import { AuthNavigator } from './src/navigator/authNavigator';
 import { MainNavigator } from './src/navigator/mainNavigator';
 import { AuthProvider, useAuth } from './src/contexts/authContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SocketProvider } from './src/contexts/socketContext'; // Importation du contexte
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,9 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <AppContent />
+          <SocketProvider>
+            <AppContent />
+          </SocketProvider>
         </SafeAreaProvider>
       </AuthProvider>
     </QueryClientProvider>

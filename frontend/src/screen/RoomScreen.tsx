@@ -7,19 +7,15 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { io } from 'socket.io-client';
 import { useNavigation } from '@react-navigation/native';
 import { RoomScreenNavigationProp } from '../types/navigation';
 import { useAuth } from '../contexts/authContext';
-
-const socket = io('http://localhost:3000', {
-  transports: ['websocket', 'polling'],
-  withCredentials: true,
-});
+import { useSocket } from '../contexts/socketContext';
 
 const RoomScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
   const { user } = useAuth();
+  const socket = useSocket();
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isPlayer1, setIsPlayer1] = useState<boolean | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
@@ -29,41 +25,9 @@ const RoomScreen = () => {
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (timer !== null && timer > 0) {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
+    if (!socket) return;
 
-      countdownRef.current = setInterval(() => {
-        setTimer((prev) => {
-          if (prev !== null && prev > 1) {
-            return prev - 1;
-          } else {
-            if (countdownRef.current) {
-              clearInterval(countdownRef.current);
-            }
-            return 0;
-          }
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, [timer]);
-
-  useEffect(() => {
-    socket.on('connect', () => {
-      console.log('✅ Connecté au WebSocket :', socket.id);
-
-      if (user && user.id) {
-        socket.emit('authenticate', { userId: user.id });
-        console.log('🔐 Authentification socket avec userId:', user.id);
-      }
-    });
+    console.log('✅ RoomScreen connecté au WebSocket :', socket.id);
 
     socket.on('matchFound', (data) => {
       console.log('🎮 Match trouvé !', data);
@@ -79,10 +43,6 @@ const RoomScreen = () => {
       setIsInQueue(false);
       setHasAccepted(false);
 
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-
       if (data.roomId) {
         navigation.navigate('Quiz', {
           roomId: data.roomId,
@@ -91,26 +51,14 @@ const RoomScreen = () => {
       }
     });
 
-    socket.on('matchTimeout', (data) => {
+    socket.on('matchTimeout', () => {
       console.log('⏰ Le match a expiré');
-      setRoomId(null);
-      setTimer(null);
-      setHasAccepted(false);
-      setIsInQueue(false);
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
+      resetState();
     });
 
-    socket.on('playerLeft', (data) => {
+    socket.on('playerLeft', () => {
       console.log('👋 Un joueur a quitté le match');
-      setRoomId(null);
-      setTimer(null);
-      setHasAccepted(false);
-      setIsInQueue(false);
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
+      resetState();
     });
 
     return () => {
@@ -118,14 +66,23 @@ const RoomScreen = () => {
       socket.off('gameStart');
       socket.off('matchTimeout');
       socket.off('playerLeft');
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
     };
-  }, [navigation, user]);
+  }, [socket, navigation]);
+
+  const resetState = () => {
+    setRoomId(null);
+    setIsPlayer1(null);
+    setTimer(null);
+    setMatchStarted(false);
+    setIsInQueue(false);
+    setHasAccepted(false);
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+  };
 
   const joinQueue = () => {
-    if (user && user.id) {
+    if (user && user.id && socket) {
       socket.emit('joinQueue', { userId: user.id });
       setIsInQueue(true);
       console.log(
@@ -142,21 +99,13 @@ const RoomScreen = () => {
 
   const leaveQueue = () => {
     if (timer !== null && timer > 0) return;
-    socket.emit('leaveQueue');
-    setRoomId(null);
-    setIsPlayer1(null);
-    setTimer(null);
-    setMatchStarted(false);
-    setIsInQueue(false);
-    setHasAccepted(false);
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-    }
+    socket?.emit('leaveQueue');
+    resetState();
     console.log("📤 Sortie de la file d'attente.");
   };
 
   const acceptMatch = () => {
-    if (roomId) {
+    if (roomId && socket) {
       socket.emit('acceptMatch', { roomId });
       setHasAccepted(true);
       console.log('✅ Match accepté');
@@ -209,16 +158,6 @@ const RoomScreen = () => {
         )
       )}
 
-      {isPlayer1 !== null && (
-        <View style={styles.playerContainer}>
-          <Text style={styles.playerText}>
-            {isPlayer1
-              ? '🔵 Vous êtes le joueur 1'
-              : '🔴 Vous êtes le joueur 2'}
-          </Text>
-        </View>
-      )}
-
       <View style={styles.buttonContainer}>
         <Button
           title="Rejoindre la file"
@@ -253,30 +192,19 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     color: '#2c3e50',
   },
-  queueContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
+  queueContainer: { alignItems: 'center', marginBottom: 30 },
   queueText: {
     fontSize: 20,
     color: '#3498db',
     fontWeight: 'bold',
     marginTop: 15,
   },
-  queueSubText: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginTop: 5,
-  },
+  queueSubText: { fontSize: 16, color: '#7f8c8d', marginTop: 5 },
   matchContainer: {
     alignItems: 'center',
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
     elevation: 5,
     marginBottom: 20,
   },
@@ -286,11 +214,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  roomIdText: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginBottom: 15,
-  },
+  roomIdText: { fontSize: 16, color: '#7f8c8d', marginBottom: 15 },
   timerContainer: {
     backgroundColor: '#f8f9fa',
     padding: 15,
@@ -304,42 +228,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  acceptedText: {
-    fontSize: 18,
-    color: '#2ecc71',
-    fontWeight: 'bold',
-  },
+  acceptedText: { fontSize: 18, color: '#2ecc71', fontWeight: 'bold' },
   startContainer: {
     backgroundColor: '#e8f4f8',
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
   },
-  startText: {
-    fontSize: 24,
-    color: '#3498db',
-    fontWeight: 'bold',
-  },
+  startText: { fontSize: 24, color: '#3498db', fontWeight: 'bold' },
+  buttonContainer: { width: '100%', marginTop: 20, gap: 10 },
   waitingText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#7f8c8d',
     textAlign: 'center',
-    marginBottom: 30,
-  },
-  playerContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-  playerText: {
-    fontSize: 18,
-    color: '#2c3e50',
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    width: '100%',
     marginTop: 20,
-    gap: 10,
   },
 });

@@ -15,6 +15,7 @@ interface MatchRequest {
   players: Socket[];
   acceptedPlayers: Set<string>;
   timer: NodeJS.Timeout;
+  matchmakingId?: string;
 }
 
 interface ConnectedUser {
@@ -43,23 +44,18 @@ export class MyGateway implements OnModuleInit {
 
   private queue: Socket[] = [];
   private matchRequests: Map<string, MatchRequest> = new Map();
+  private activeGames: Map<string, MatchRequest> = new Map();
   private connectedUsers: Map<string, ConnectedUser> = new Map();
 
   onModuleInit() {
-    console.log('✅ WebSocket Gateway est démarré !');
     this.server.on('connection', (socket) => {
-      console.log(`🔌 Nouvelle connexion : ${socket.id}`);
-
       socket.on('disconnect', () => {
-        console.log(`❌ Déconnexion : ${socket.id}`);
         this.removeFromQueue(socket.id);
         this.handleDisconnect(socket.id);
-
         if (socket.data?.userId) {
           const userConnections = this.connectedUsers.get(socket.data.userId);
           if (userConnections) {
             userConnections.socketIds.delete(socket.id);
-
             if (userConnections.activeSocketId === socket.id) {
               userConnections.activeSocketId = undefined;
             }
@@ -79,7 +75,6 @@ export class MyGateway implements OnModuleInit {
   ) {
     if (data && data.userId) {
       client.data = { ...client.data, userId: data.userId };
-
       let userConnections = this.connectedUsers.get(data.userId);
       if (!userConnections) {
         userConnections = {
@@ -90,7 +85,6 @@ export class MyGateway implements OnModuleInit {
         this.connectedUsers.set(data.userId, userConnections);
       } else {
         userConnections.socketIds.add(client.id);
-
         if (!userConnections.activeSocketId) {
           userConnections.activeSocketId = client.id;
         }
@@ -99,18 +93,12 @@ export class MyGateway implements OnModuleInit {
   }
 
   @SubscribeMessage('joinQueue')
-  handleJoinQueue(
+  async handleJoinQueue(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId?: string } = {},
   ) {
     const userId = data?.userId || client.id;
-
-    console.log(
-      `📥 Le joueur ${client.id} (userId: ${userId}) a rejoint la file d'attente.`,
-    );
-
     client.data = { ...client.data, userId };
-
     const userConnections = this.connectedUsers.get(userId);
     if (userConnections) {
       userConnections.activeSocketId = client.id;
@@ -124,35 +112,25 @@ export class MyGateway implements OnModuleInit {
     const isUserInQueue = this.queue.some(
       (socket) => socket.data?.userId === userId && socket.id !== client.id,
     );
-
     if (isUserInQueue || this.queue.includes(client)) {
       client.emit('error', { message: "Déjà dans la file d'attente" });
       return;
     }
-
     this.queue.push(client);
-    console.log(`Nombre de joueurs en attente : ${this.queue.length}`);
-
     if (this.queue.length >= 2) {
       const player1 = this.queue.shift();
       const player2 = this.queue.shift();
-
       if (player1 && player2) {
         const roomId = `match-${Date.now()}`;
-        console.log(`🎮 Création du match dans la room ${roomId}`);
-
         player1.join(roomId);
         player2.join(roomId);
-
         const matchRequest: MatchRequest = {
           roomId,
           players: [player1, player2],
           acceptedPlayers: new Set(),
           timer: setTimeout(() => this.handleMatchTimeout(roomId), 15000),
         };
-
         this.matchRequests.set(roomId, matchRequest);
-
         this.server.to(roomId).emit('matchFound', {
           roomId,
           players: [player1.id, player2.id],
@@ -172,37 +150,27 @@ export class MyGateway implements OnModuleInit {
       client.emit('error', { message: 'Match non trouvé' });
       return;
     }
-
     matchRequest.acceptedPlayers.add(client.id);
-    console.log(`✅ Le joueur ${client.id} a accepté le match`);
-
     if (matchRequest.acceptedPlayers.size === matchRequest.players.length) {
       clearTimeout(matchRequest.timer);
-
       try {
         const player1UserId = matchRequest.players[0].data?.userId;
         const player2UserId = matchRequest.players[1].data?.userId;
-
         if (!player1UserId || !player2UserId) {
           throw new Error('User IDs not found in socket data');
         }
-
         const player1Exists = await this.userService.findOne(player1UserId);
         const player2Exists = await this.userService.findOne(player2UserId);
-
         if (!player1Exists || !player2Exists) {
           throw new Error('One or both users do not exist in the database');
         }
-
         const matchmaking = await this.matchmakingService.create({
           playerOneId: player1UserId,
           playerTwoId: player2UserId,
         });
-
-        console.log(`🎲 Matchmaking créé avec ID: ${matchmaking.id}`);
-
+        matchRequest.matchmakingId = matchmaking.id;
+        this.activeGames.set(data.roomId, matchRequest);
         this.matchRequests.delete(data.roomId);
-
         matchRequest.players.forEach((player, index) => {
           player.emit('gameStart', {
             isPlayer1: index === 0,
@@ -218,8 +186,6 @@ export class MyGateway implements OnModuleInit {
           });
         });
       } catch (error) {
-        console.error('Error creating matchmaking:', error);
-
         matchRequest.players.forEach((player) => {
           player.emit('error', {
             message: 'Erreur lors de la création du match',
@@ -235,18 +201,17 @@ export class MyGateway implements OnModuleInit {
   handleLeaveQueue(@ConnectedSocket() client: Socket) {
     this.removeFromQueue(client.id);
     client.emit('leftQueue');
-    console.log(`📤 Le joueur ${client.id} a quitté la file d'attente.`);
   }
 
   private handleMatchTimeout(roomId: string) {
-    const matchRequest = this.matchRequests.get(roomId);
+    const matchRequest =
+      this.matchRequests.get(roomId) || this.activeGames.get(roomId);
     if (!matchRequest) return;
-
     matchRequest.players.forEach((player) => {
       player.emit('matchTimeout', { roomId });
     });
-
     this.matchRequests.delete(roomId);
+    this.activeGames.delete(roomId);
   }
 
   private handleDisconnect(socketId: string) {
@@ -257,9 +222,20 @@ export class MyGateway implements OnModuleInit {
             player.emit('playerLeft', { roomId });
           }
         });
-
         clearTimeout(matchRequest.timer);
         this.matchRequests.delete(roomId);
+        break;
+      }
+    }
+    for (const [roomId, matchRequest] of this.activeGames.entries()) {
+      if (matchRequest.players.some((player) => player.id === socketId)) {
+        matchRequest.players.forEach((player) => {
+          if (player.id !== socketId) {
+            player.emit('playerLeft', { roomId });
+          }
+        });
+        clearTimeout(matchRequest.timer);
+        this.activeGames.delete(roomId);
         break;
       }
     }
@@ -269,23 +245,52 @@ export class MyGateway implements OnModuleInit {
     this.queue = this.queue.filter((socket) => socket.id !== socketId);
   }
 
-  @SubscribeMessage('endGame')
-  async handleEndGame(
+  @SubscribeMessage('updateScore')
+  handleUpdateScore(
     @ConnectedSocket() client: Socket,
-    @MessageBody()
-    data: { roomId: string; playerOneScore: number; playerTwoScore: number },
+    @MessageBody() data: { roomId: string; userId: string; score: number },
   ) {
-    const matchRequest = this.matchRequests.get(data.roomId);
+    const matchRequest =
+      this.activeGames.get(data.roomId) || this.matchRequests.get(data.roomId);
     if (!matchRequest) {
       client.emit('error', { message: 'Match non trouvé' });
       return;
     }
 
-    console.log(`🏆 Fin du match dans la room ${data.roomId}`);
+    const player = matchRequest.players.find(
+      (p) => p.data?.userId === data.userId,
+    );
+    if (!player) {
+      client.emit('error', { message: 'Joueur non trouvé dans la partie' });
+      return;
+    }
+
+    // Mise à jour du score du joueur
+    player.data.score = data.score;
+    console.log('Score mis à jour:', data.score, 'pour userId:', data.userId);
+
+    // Émission de la mise à jour du score à tous les joueurs de la salle
+    this.server.to(data.roomId).emit('scoreUpdated', {
+      userId: data.userId,
+      score: data.score,
+    });
+  }
+
+  @SubscribeMessage('quizFinished')
+  async handleQuizFinished(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { roomId: string; playerOneScore: number; playerTwoScore: number },
+  ) {
+    const matchRequest =
+      this.activeGames.get(data.roomId) || this.matchRequests.get(data.roomId);
+    if (!matchRequest) {
+      client.emit('error', { message: 'Match non trouvé' });
+      return;
+    }
 
     const player1 = matchRequest.players[0];
     const player2 = matchRequest.players[1];
-
     const playerOneId = player1.data?.userId;
     const playerTwoId = player2.data?.userId;
 
@@ -294,13 +299,11 @@ export class MyGateway implements OnModuleInit {
       return;
     }
 
-    let winnerId: string;
+    let winnerId: string | null = null;
     if (data.playerOneScore > data.playerTwoScore) {
       winnerId = playerOneId;
     } else if (data.playerTwoScore > data.playerOneScore) {
       winnerId = playerTwoId;
-    } else {
-      winnerId = '';
     }
 
     try {
@@ -308,12 +311,8 @@ export class MyGateway implements OnModuleInit {
         ID: data.roomId,
         playerOneScore: data.playerOneScore,
         playerTwoScore: data.playerTwoScore,
-        winnerId: winnerId,
+        winnerId: winnerId || '',
       });
-
-      console.log(
-        `✅ Match sauvegardé avec succès pour la room ${data.roomId}`,
-      );
 
       this.server.to(data.roomId).emit('gameOver', {
         winnerId: winnerId || null,
@@ -321,11 +320,29 @@ export class MyGateway implements OnModuleInit {
         playerTwoScore: data.playerTwoScore,
         message: winnerId ? `Le joueur ${winnerId} a gagné !` : 'Match nul !',
       });
+
+      this.activeGames.delete(data.roomId);
+      this.matchRequests.delete(data.roomId);
     } catch (error) {
-      console.error('❌ Erreur en sauvegardant le match:', error);
       client.emit('error', {
         message: 'Erreur lors de l’enregistrement du match',
       });
     }
+  }
+
+  @SubscribeMessage('nextQuestion')
+  handleNextQuestion(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; questionIndex: number },
+  ) {
+    const matchRequest =
+      this.activeGames.get(data.roomId) || this.matchRequests.get(data.roomId);
+    if (!matchRequest) {
+      client.emit('error', { message: 'Match non trouvé' });
+      return;
+    }
+    this.server.to(data.roomId).emit('updateQuestion', {
+      questionIndex: data.questionIndex,
+    });
   }
 }

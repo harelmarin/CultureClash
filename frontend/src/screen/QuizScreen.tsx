@@ -11,6 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSocket } from '../contexts/socketContext';
+import { useAuth } from '../contexts/authContext';
 
 type Question = {
   id: string;
@@ -29,21 +31,22 @@ type QuizScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 const QuizScreen = () => {
+  const { user } = useAuth();
+  const socket = useSocket();
   const route = useRoute<QuizScreenRouteProp>();
   const { roomId, matchmaking } = route.params;
   const navigation = useNavigation<QuizScreenNavigationProp>();
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>(
     matchmaking?.questions || [],
   );
   const [loading, setLoading] = useState(!matchmaking?.questions?.length);
   const [timeLeft, setTimeLeft] = useState(10);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    console.log('❓ Questions :', questions);
-  }, [matchmaking]);
+  const [playerScore, setPlayerScore] = useState(0);
+  const [opponentScore, setOpponentScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -51,30 +54,79 @@ const QuizScreen = () => {
     } else {
       handleTimeout();
     }
-
-    return () =>
-      clearTimeout(timerRef.current as unknown as number | undefined);
+    return () => clearTimeout(timerRef.current as NodeJS.Timeout);
   }, [timeLeft]);
 
-  const handleAnswer = async (isCorrect: boolean) => {
+  useEffect(() => {
+    socket.emit('joinRoom', { roomId, playerId: user.id });
+    return () => {
+      socket.off('scoreUpdated');
+    };
+  }, [socket, roomId, user.id]);
+
+  useEffect(() => {
+    socket.on('scoreUpdated', (data) => {
+      if (data.userId === user.id) {
+        setPlayerScore(data.score);
+      } else {
+        setOpponentScore(data.score);
+      }
+    });
+
+    return () => {
+      socket.off('scoreUpdated');
+    };
+  }, [socket, user.id, matchmaking]);
+
+  useEffect(() => {
+    socket.on('updateQuestion', (data) => {
+      setCurrentQuestionIndex(data.questionIndex);
+      setTimeLeft(10);
+      setSelectedAnswer(null);
+    });
+    return () => {
+      socket.off('updateQuestion');
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on('quizFinished', () => {
+      navigation.navigate('Result', { score: playerScore });
+    });
+    return () => {
+      socket.off('quizFinished');
+    };
+  }, [socket, navigation, playerScore]);
+
+  const handleAnswer = (isCorrect: boolean) => {
+    if (selectedAnswer !== null) return;
+
+    setSelectedAnswer(isCorrect);
+
+    let newScore = playerScore;
     if (isCorrect) {
-      setScore((prevScore) => prevScore + timeLeft);
+      newScore = playerScore + timeLeft;
     }
 
-    nextQuestion();
+    setPlayerScore(newScore);
+
+    socket.emit('updateScore', {
+      roomId,
+      userId: user.id,
+      score: newScore,
+    });
   };
 
   const handleTimeout = () => {
-    nextQuestion();
-  };
-
-  const nextQuestion = () => {
-    clearTimeout(timerRef.current as NodeJS.Timeout | undefined);
+    setSelectedAnswer(null);
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      const newIndex = currentQuestionIndex + 1;
+      socket.emit('nextQuestion', { roomId, questionIndex: newIndex });
+      setCurrentQuestionIndex(newIndex);
       setTimeLeft(10);
     } else {
-      navigation.navigate('Result', { score });
+      socket.emit('quizFinished', { roomId });
+      navigation.navigate('Result', { score: playerScore });
     }
   };
 
@@ -93,21 +145,31 @@ const QuizScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <View style={styles.scoreContainer}>
+          <Text style={styles.scoreText}>🎯 Ton score: {playerScore}</Text>
+          <Text style={styles.scoreText}>
+            🆚 Score adversaire: {opponentScore}
+          </Text>
+        </View>
         <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
-
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>{currentQuestion.text}</Text>
         </View>
-
         <View style={styles.choicesContainer}>
           {currentQuestion.choices.map((choice) => (
             <TouchableOpacity
               key={choice.id}
-              style={styles.choiceButton}
+              style={[
+                styles.choiceButton,
+                selectedAnswer !== null && {
+                  backgroundColor: choice.isCorrect ? 'green' : 'red',
+                },
+              ]}
               onPress={() => handleAnswer(choice.isCorrect)}
+              disabled={selectedAnswer !== null}
             >
               <Text style={styles.choiceText}>{choice.text}</Text>
             </TouchableOpacity>
@@ -119,14 +181,8 @@ const QuizScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
+  safeArea: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20 },
   timer: {
     fontSize: 18,
     color: '#ff5555',
@@ -152,9 +208,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
       },
-      android: {
-        elevation: 5,
-      },
+      android: { elevation: 5 },
     }),
   },
   questionText: {
@@ -163,9 +217,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
   },
-  choicesContainer: {
-    gap: 10,
-  },
+  choicesContainer: { gap: 10 },
   choiceButton: {
     backgroundColor: '#6C63FF',
     padding: 15,
@@ -178,9 +230,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
       },
-      android: {
-        elevation: 3,
-      },
+      android: { elevation: 3 },
     }),
   },
   choiceText: {
@@ -189,6 +239,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
   },
+  scoreContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
 });
 
 export default QuizScreen;
