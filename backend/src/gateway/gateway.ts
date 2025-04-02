@@ -306,9 +306,6 @@ export class MyGateway implements OnModuleInit {
     }
 
     try {
-      console.log('Room ID : ', data.roomId);
-      console.log('Player One : ', data.playerOneScore);
-      console.log('Player Two : ', data.playerTwoScore);
       await this.matchmakingService.endgame({
         id: data.roomId,
         playerOneScore: data.playerOneScore,

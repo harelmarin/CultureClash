@@ -37,7 +37,6 @@ const RoomScreen = () => {
     });
 
     socket.on('gameStart', (data) => {
-      console.log('🚀 La partie commence !', data);
       setIsPlayer1(data.isPlayer1);
       setMatchStarted(true);
       setIsInQueue(false);

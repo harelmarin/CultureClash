@@ -3,12 +3,10 @@ import { User } from '../types/userTypes';
 
 const BASE_URL = 'http://localhost:3000';
 
-// Générer un identifiant unique pour la session
 const generateSessionId = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 };
 
-// Stocker l'identifiant de session
 let currentSessionId: string | null = null;
 
 export const refreshSession = async (): Promise<boolean> => {
