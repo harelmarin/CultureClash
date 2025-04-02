@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSocket } from '../contexts/socketContext';
 import { useAuth } from '../contexts/authContext';
 import GameOverModal from '../components/modals/GameOver';
+import { getUserById } from '../services/userService';
 
 type Question = {
   id: string;
@@ -48,7 +49,38 @@ const QuizScreen = () => {
   const [opponentScore, setOpponentScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [winner, setWinner] = useState(null);
+  const [winner, setWinner] = useState<string | null>(null);
+  const [yourname, setYourName] = useState('Vous');
+  const [opponentname, setOpponentName] = useState('Adversaire');
+
+  useEffect(() => {
+    const fetchPlayerNames = async () => {
+      try {
+        if (!matchmaking) return;
+
+        const [playerOne, playerTwo] = await Promise.all([
+          getUserById(matchmaking.playerOneId),
+          getUserById(matchmaking.playerTwoId),
+        ]);
+
+        if (!playerOne || !playerTwo) {
+          console.error('Failed to fetch player data');
+          return;
+        }
+
+        setYourName(
+          user.id === playerOne.id ? playerOne.username : playerTwo.username,
+        );
+        setOpponentName(
+          user.id === playerOne.id ? playerTwo.username : playerOne.username,
+        );
+      } catch (error) {
+        console.error('Erreur lors de la récupération des noms:', error);
+      }
+    };
+
+    fetchPlayerNames();
+  }, [matchmaking, user.id]);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -112,20 +144,31 @@ const QuizScreen = () => {
       playerOneScore: playerScore,
       playerTwoScore: opponentScore,
     });
+
+    setWinner(winnerId);
   };
 
   useEffect(() => {
     socket.on('gameOver', (data) => {
-      setWinner(data.winnerId);
-      setPlayerScore(playerScore);
-      setOpponentScore(opponentScore);
+      const winnerId = data.winnerId;
+
+      if (winnerId && winnerId !== 'draw') {
+        getUserById(winnerId).then((winnerUser) => {
+          if (winnerUser) {
+            setWinner(winnerUser.username);
+          }
+        });
+      } else {
+        setWinner('Draw');
+      }
+
       setIsGameOver(true);
     });
 
     return () => {
       socket.off('gameOver');
     };
-  }, [socket, navigation]);
+  }, [socket]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (selectedAnswer !== null) return;
@@ -162,9 +205,11 @@ const QuizScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.scoreContainer}>
-          <Text style={styles.scoreText}>🎯 Ton score: {playerScore}</Text>
           <Text style={styles.scoreText}>
-            🆚 Score adversaire: {opponentScore}
+            {yourname} {playerScore}
+          </Text>
+          <Text style={styles.scoreText}>
+            🆚 {opponentname}: {opponentScore}
           </Text>
         </View>
         <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>
@@ -196,6 +241,8 @@ const QuizScreen = () => {
           winner={winner}
           playerOneScore={playerScore}
           playerTwoScore={opponentScore}
+          yourName={yourname}
+          OpponentName={opponentname}
           onClose={() => setIsGameOver(false)}
         />
       </View>

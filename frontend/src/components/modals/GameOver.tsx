@@ -9,6 +9,8 @@ interface GameOverModalProps {
   winner: string | null;
   playerOneScore: number;
   playerTwoScore: number;
+  yourName: string;
+  OpponentName: string;
   onClose: () => void;
 }
 
@@ -19,6 +21,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   winner,
   playerOneScore,
   playerTwoScore,
+  yourName,
+  OpponentName,
   onClose,
 }) => {
   if (!isOpen) return null;
@@ -43,8 +47,12 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           <Text style={styles.message}>
             🏆 {winner ? `Le gagnant est ${winner}` : 'Match nul !'}
           </Text>
-          <Text style={styles.scores}>: {playerOneScore} pts</Text>
-          <Text style={styles.scores}>Joueur 2: {playerTwoScore} pts</Text>
+          <Text style={styles.scores}>
+            {yourName} : {playerOneScore} pts
+          </Text>
+          <Text style={styles.scores}>
+            {OpponentName} : {playerTwoScore} pts
+          </Text>
           <TouchableOpacity
             style={styles.button}
             onPress={handleCloseAndNavigate}

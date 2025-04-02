@@ -6,3 +6,8 @@ export interface User {
   profilePic?: string;
   createdAt: Date;
 }
+
+export interface UserName {
+  id: string;
+  username: string;
+}
