@@ -13,11 +13,12 @@ export class MatchmakingService {
   ) {}
 
   async create(createMatchmakingDto: CreateMatchmakingDto) {
-    const questions = await this.questionService.getRandom(3);
+    const questions = await this.questionService.getRandom(1);
 
     try {
       const matchs = await this.prisma.matchmakingSession.create({
         data: {
+          id: createMatchmakingDto.id,
           playerOneId: createMatchmakingDto.playerOneId,
           playerTwoId: createMatchmakingDto.playerTwoId,
           questions: {
@@ -73,7 +74,7 @@ export class MatchmakingService {
     try {
       const updatedMatch = await this.prisma.matchmakingSession.update({
         where: {
-          id: endgameDto.ID,
+          id: endgameDto.id,
         },
         data: {
           playerOneScore: endgameDto.playerOneScore,

@@ -7,7 +7,12 @@ export type RootStackParamList = {
   Register: undefined;
   Friend: undefined;
   Quiz: { roomId: string; matchmaking: any };
-  Result: { score: number };
+  Result: {
+    winnerId: number;
+    playerOneScore: number;
+    playerTwoScore: number;
+    message: string;
+  };
 };
 
 export type RoomScreenNavigationProp = NativeStackNavigationProp<

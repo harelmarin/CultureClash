@@ -3,13 +3,12 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class EndGameDto {
   @ApiProperty({
-    description: 'ID de la game',
+    description: 'ID de la game webSocket',
     type: String,
-    example: 'fed2c5fb-45bb-4fdc-80bf-4688d8cb94cd',
+    example: 'match-1743577182430',
   })
   @IsString()
-  ID: string;
-
+  id: string;
   @ApiProperty({
     description: 'Score du joueur 1',
     type: Number,

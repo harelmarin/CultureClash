@@ -39,7 +39,7 @@ const LoginForm = () => {
       const sessionValid = await checkSession();
       if (sessionValid) {
         console.log('Redirection vers MainNavigator');
-        setIsAuthenticated(true); // ✅ Correctement mis à jour
+        setIsAuthenticated(true);
       } else {
         setError('La session est invalide. Veuillez vous reconnecter.');
       }

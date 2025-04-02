@@ -14,22 +14,11 @@ const ResultScreen = ({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Result'>) => {
-  const { score } = route.params;
+  const { winnerId } = route.params;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.scoreText}>Score</Text>
-        <Text style={styles.score}>{score}</Text>
-
-        <Text style={styles.message}>
-          {score > 7
-            ? 'Excellent !'
-            : score > 4
-            ? 'Bien joué !'
-            : 'Continuez à vous entraîner !'}
-        </Text>
-
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate('Home')}

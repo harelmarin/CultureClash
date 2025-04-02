@@ -13,6 +13,7 @@ import { RootStackParamList } from '../types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSocket } from '../contexts/socketContext';
 import { useAuth } from '../contexts/authContext';
+import GameOverModal from '../components/modals/GameOver';
 
 type Question = {
   id: string;
@@ -36,7 +37,6 @@ const QuizScreen = () => {
   const route = useRoute<QuizScreenRouteProp>();
   const { roomId, matchmaking } = route.params;
   const navigation = useNavigation<QuizScreenNavigationProp>();
-
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<Question[]>(
     matchmaking?.questions || [],
@@ -47,6 +47,8 @@ const QuizScreen = () => {
   const [playerScore, setPlayerScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -89,14 +91,41 @@ const QuizScreen = () => {
     };
   }, [socket]);
 
-  useEffect(() => {
-    socket.on('quizFinished', () => {
-      navigation.navigate('Result', { score: playerScore });
+  const handleTimeout = () => {
+    console.log('playerScore:', playerScore, 'opponentScore:', opponentScore);
+
+    let winnerId: string | null = null;
+
+    if (playerScore > opponentScore) {
+      winnerId = user.id;
+    } else if (opponentScore > playerScore) {
+      winnerId =
+        matchmaking?.playerTwoId === user.id
+          ? matchmaking?.playerOneId
+          : matchmaking?.playerTwoId;
+    } else {
+      winnerId = 'draw';
+    }
+
+    socket.emit('quizFinished', {
+      roomId,
+      playerOneScore: playerScore,
+      playerTwoScore: opponentScore,
     });
+  };
+
+  useEffect(() => {
+    socket.on('gameOver', (data) => {
+      setWinner(data.winnerId);
+      setPlayerScore(playerScore);
+      setOpponentScore(opponentScore);
+      setIsGameOver(true);
+    });
+
     return () => {
-      socket.off('quizFinished');
+      socket.off('gameOver');
     };
-  }, [socket, navigation, playerScore]);
+  }, [socket, navigation]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (selectedAnswer !== null) return;
@@ -115,19 +144,6 @@ const QuizScreen = () => {
       userId: user.id,
       score: newScore,
     });
-  };
-
-  const handleTimeout = () => {
-    setSelectedAnswer(null);
-    if (currentQuestionIndex < questions.length - 1) {
-      const newIndex = currentQuestionIndex + 1;
-      socket.emit('nextQuestion', { roomId, questionIndex: newIndex });
-      setCurrentQuestionIndex(newIndex);
-      setTimeLeft(10);
-    } else {
-      socket.emit('quizFinished', { roomId });
-      navigation.navigate('Result', { score: playerScore });
-    }
   };
 
   if (loading) {
@@ -175,6 +191,13 @@ const QuizScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+        <GameOverModal
+          isOpen={isGameOver}
+          winner={winner}
+          playerOneScore={playerScore}
+          playerTwoScore={opponentScore}
+          onClose={() => setIsGameOver(false)}
+        />
       </View>
     </SafeAreaView>
   );

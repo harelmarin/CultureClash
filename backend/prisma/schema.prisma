@@ -25,7 +25,7 @@ model User {
 }
 
 model MatchmakingSession {
-  id            String      @id @default(uuid())
+  id   String      @id
   playerOneId   String
   playerOne     User        @relation("PlayerOneSessions", fields: [playerOneId], references: [id])
   playerTwoId   String?

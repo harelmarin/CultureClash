@@ -3,14 +3,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SessionService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async createSession(userId: string, sessionId: string) {
     return this.prisma.session.create({
       data: {
         id: sessionId,
         userId: userId,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 heures
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
   }
@@ -46,4 +46,4 @@ export class SessionService {
       },
     });
   }
-} 
+}

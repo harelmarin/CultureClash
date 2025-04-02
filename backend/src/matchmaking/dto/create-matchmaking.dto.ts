@@ -3,6 +3,14 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMatchmakingDto {
   @ApiProperty({
+    description: 'Id de la game webSocket',
+    type: String,
+    example: 'match-1743577182430',
+  })
+  @IsUUID()
+  id: string;
+
+  @ApiProperty({
     description: 'ID du joueur 1',
     type: String,
     example: '15688eb8-c43e-4f9b-92bf-0d4ae60232f5',

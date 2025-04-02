@@ -165,6 +165,7 @@ export class MyGateway implements OnModuleInit {
           throw new Error('One or both users do not exist in the database');
         }
         const matchmaking = await this.matchmakingService.create({
+          id: data.roomId,
           playerOneId: player1UserId,
           playerTwoId: player2UserId,
         });
@@ -265,11 +266,8 @@ export class MyGateway implements OnModuleInit {
       return;
     }
 
-    // Mise à jour du score du joueur
     player.data.score = data.score;
-    console.log('Score mis à jour:', data.score, 'pour userId:', data.userId);
 
-    // Émission de la mise à jour du score à tous les joueurs de la salle
     this.server.to(data.roomId).emit('scoreUpdated', {
       userId: data.userId,
       score: data.score,
@@ -282,12 +280,13 @@ export class MyGateway implements OnModuleInit {
     @MessageBody()
     data: { roomId: string; playerOneScore: number; playerTwoScore: number },
   ) {
-    const matchRequest =
-      this.activeGames.get(data.roomId) || this.matchRequests.get(data.roomId);
+    const matchRequest = this.activeGames.get(data.roomId);
     if (!matchRequest) {
       client.emit('error', { message: 'Match non trouvé' });
       return;
     }
+
+    console.log(data.roomId);
 
     const player1 = matchRequest.players[0];
     const player2 = matchRequest.players[1];
@@ -307,12 +306,17 @@ export class MyGateway implements OnModuleInit {
     }
 
     try {
+      console.log('Room ID : ', data.roomId);
+      console.log('Player One : ', data.playerOneScore);
+      console.log('Player Two : ', data.playerTwoScore);
       await this.matchmakingService.endgame({
-        ID: data.roomId,
+        id: data.roomId,
         playerOneScore: data.playerOneScore,
         playerTwoScore: data.playerTwoScore,
         winnerId: winnerId || '',
       });
+
+      console.log('🚀 Envoi de gameOver à la room:', data.roomId);
 
       this.server.to(data.roomId).emit('gameOver', {
         winnerId: winnerId || null,
