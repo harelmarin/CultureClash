@@ -9,7 +9,7 @@ import { AuthNavigator } from './src/navigator/authNavigator';
 import { MainNavigator } from './src/navigator/mainNavigator';
 import { AuthProvider, useAuth } from './src/contexts/authContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from './src/contexts/socketContext'; // Importation du contexte
+import { SocketProvider } from './src/contexts/socketContext';
 
 const queryClient = new QueryClient();
 

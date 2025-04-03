@@ -106,4 +106,22 @@ export class MatchmakingService {
       );
     }
   }
+
+  getUserMatchmakingSessions = async (userId: string) => {
+    const userWithMatchmakingSessions = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        sessionsAsPlayerOne: true,
+        sessionsAsPlayerTwo: true,
+      },
+    });
+
+    if (!userWithMatchmakingSessions) {
+      throw new Error('Utilisateur non trouvé');
+    }
+    return [
+      ...userWithMatchmakingSessions.sessionsAsPlayerOne,
+      ...userWithMatchmakingSessions.sessionsAsPlayerTwo,
+    ];
+  };
 }

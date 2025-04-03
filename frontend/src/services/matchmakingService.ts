@@ -35,3 +35,22 @@ export const endMatchmaking = async (): Promise<Matchmaking | boolean> => {
     return false;
   }
 };
+
+export const getUserMatchmakingSessions = async (
+  id: string,
+): Promise<Matchmaking | boolean> => {
+  try {
+    const matchmaking = await fetch(`${BASE_URL}/matchmaking/user/${id}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (matchmaking.ok) {
+      return (await matchmaking.json()) as Matchmaking;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des matchmakings', error);
+    return false;
+  }
+};

@@ -37,7 +37,6 @@ const QuizScreen = () => {
   const socket = useSocket();
   const route = useRoute<QuizScreenRouteProp>();
   const { roomId, matchmaking } = route.params;
-  const navigation = useNavigation<QuizScreenNavigationProp>();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<Question[]>(
     matchmaking?.questions || [],
@@ -122,53 +121,92 @@ const QuizScreen = () => {
       socket.off('updateQuestion');
     };
   }, [socket]);
-
   const handleTimeout = () => {
-    console.log('playerScore:', playerScore, 'opponentScore:', opponentScore);
+    setTimeout(() => {
+      if (isGameOver) return;
+      const playerOneId = matchmaking?.playerOneId;
+      const playerTwoId = matchmaking?.playerTwoId;
 
-    let winnerId: string | null = null;
+      let playerOneScore = null;
+      let playerTwoScore = null;
 
-    if (playerScore > opponentScore) {
-      winnerId = user.id;
-    } else if (opponentScore > playerScore) {
-      winnerId =
-        matchmaking?.playerTwoId === user.id
-          ? matchmaking?.playerOneId
-          : matchmaking?.playerTwoId;
-    } else {
-      winnerId = 'draw';
-    }
+      if (playerOneId === user.id) {
+        playerOneScore = playerScore;
+        playerTwoScore = opponentScore;
+      } else if (playerTwoId === user.id) {
+        playerOneScore = opponentScore;
+        playerTwoScore = playerScore;
+      }
 
-    socket.emit('quizFinished', {
-      roomId,
-      playerOneScore: playerScore,
-      playerTwoScore: opponentScore,
-    });
+      if (playerOneScore === null || playerTwoScore === null) {
+        console.error('Erreur: les scores sont incorrects ou manquants.');
+        return;
+      }
 
-    setWinner(winnerId);
+      if (playerOneScore === playerTwoScore) {
+        socket.emit('quizFinished', {
+          roomId,
+          playerOneScore,
+          playerTwoScore,
+          winnerId: 'égalité',
+        });
+      } else if (playerOneScore > playerTwoScore) {
+        socket.emit('quizFinished', {
+          roomId,
+          playerOneScore,
+          playerTwoScore,
+          winnerId: playerOneId,
+        });
+      } else if (playerTwoScore > playerOneScore) {
+        socket.emit('quizFinished', {
+          roomId,
+          playerOneScore,
+          playerTwoScore,
+          winnerId: playerTwoId,
+        });
+      }
+    }, 100);
   };
 
   useEffect(() => {
-    socket.on('gameOver', (data) => {
+    interface GameOverData {
+      winnerId: string | null;
+    }
+
+    interface User {
+      id: string;
+      username: string;
+    }
+
+    const handleGameOver = (data: GameOverData) => {
       const winnerId = data.winnerId;
 
-      if (winnerId && winnerId !== 'draw') {
-        getUserById(winnerId).then((winnerUser) => {
+      if (winnerId && winnerId !== 'égalité') {
+        getUserById(winnerId).then((winnerUser: User | null) => {
           if (winnerUser) {
             setWinner(winnerUser.username);
           }
         });
       } else {
-        setWinner('Draw');
+        setWinner('égalité');
       }
 
       setIsGameOver(true);
-    });
+    };
+
+    socket.off('gameOver', handleGameOver);
+    socket.on('gameOver', handleGameOver);
 
     return () => {
-      socket.off('gameOver');
+      socket.off('gameOver', handleGameOver);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!isGameOver) {
+      setWinner(null);
+    }
+  }, [isGameOver]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (selectedAnswer !== null) return;
@@ -181,7 +219,6 @@ const QuizScreen = () => {
     }
 
     setPlayerScore(newScore);
-
     socket.emit('updateScore', {
       roomId,
       userId: user.id,

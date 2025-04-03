@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { MatchmakingService } from './matchmaking.service';
 import { CreateMatchmakingDto } from './dto/create-matchmaking.dto';
 
@@ -52,5 +52,16 @@ export class MatchmakingController {
   @ApiBody({ type: EndGameDto })
   endgame(@Body() endgameDto: EndGameDto) {
     return this.matchmakingService.endgame(endgameDto);
+  }
+
+  @Get('user/:id')
+  @ApiOperation({ summary: 'Récupère les matchs d un joueur par son id' })
+  @ApiResponse({
+    status: 201,
+    description: 'Récupéré avec succès .',
+  })
+  @ApiResponse({ status: 400, description: 'Problème à la récupération' })
+  getUserMatchmakingSession(@Param('id') id: string) {
+    return this.matchmakingService.getUserMatchmakingSessions(id);
   }
 }

@@ -3,7 +3,7 @@ import {
   clearSession,
   getSession,
   refreshSession,
-  getMe, // Import de la nouvelle fonction
+  getMe,
 } from '../services/authService';
 
 export type AuthContextType = {

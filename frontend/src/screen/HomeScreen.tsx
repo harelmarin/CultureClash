@@ -53,6 +53,13 @@ const HomeScreen = () => {
           <Ionicons name="people-outline" size={22} color="white" />
           <Text style={styles.socialButtonText}>Social</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() => navigation.navigate('Profil')}
+        >
+          <Ionicons name="people-outline" size={22} color="white" />
+          <Text style={styles.socialButtonText}>Profil</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -150,6 +157,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+    marginTop: 16,
   },
   socialButtonText: {
     color: '#fff',
