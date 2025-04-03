@@ -19,4 +19,6 @@ export type Matchmaking = {
   questions: Question[];
   playerOneScore?: number;
   playerTwoScore?: number;
+  playerOneUsername?: string;
+  playerTwoUsername?: string;
 };
