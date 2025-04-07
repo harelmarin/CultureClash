@@ -10,4 +10,5 @@ export interface User {
 export interface UserName {
   id: string;
   username: string;
+  points: number;
 }

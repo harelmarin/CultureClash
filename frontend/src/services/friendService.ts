@@ -142,7 +142,7 @@ export const FriendFetchService = {
 export const FriendService = {
   getFriendsList: async (userId: string): Promise<Follow[]> => {
     try {
-      const response = await fetch(`${IP_PC}}/follow/${userId}/followers`, {
+      const response = await fetch(`${IP_PC}/follow/${userId}/followers`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -156,7 +156,7 @@ export const FriendService = {
       return [];
     } catch (error) {
       console.error(
-        "Erreur lors de la récupération de la liste d'amis:",
+        `Erreur lors de la récupération de la liste d'amis: ${userId}`,
         error,
       );
       return [];

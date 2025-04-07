@@ -121,4 +121,38 @@ export class UserService {
       throw new InternalServerErrorException(error);
     }
   }
+
+  async updatePoint(
+    winner: string,
+    loser: string
+  ): Promise<{ winner: User; loser: User }> {
+    try {
+      const checkScoreLoser = await this.prisma.user.findUnique({
+        where: { id: loser },
+        select: { points: true },
+      });
+
+      if (!checkScoreLoser) {
+        throw new NotFoundException(`User ${loser} not found`);
+      }
+
+      const newLoserPoints = checkScoreLoser.points < 8 ? 0 : checkScoreLoser.points - 8;
+
+      const [winnerUser, loserUser] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: winner },
+          data: { points: { increment: 8 } },
+        }),
+        this.prisma.user.update({
+          where: { id: loser },
+          data: { points: newLoserPoints },
+        }),
+      ]);
+
+      return { winner: winnerUser, loser: loserUser };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
 }

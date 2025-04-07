@@ -15,6 +15,7 @@ import { useSocket } from '../contexts/socketContext';
 import { useAuth } from '../contexts/authContext';
 import GameOverModal from '../components/modals/GameOver';
 import { getUserById } from '../services/userService';
+import { updatePoints } from '../services/pointService';
 
 type Question = {
   id: string;
@@ -51,6 +52,8 @@ const QuizScreen = () => {
   const [winner, setWinner] = useState<string | null>(null);
   const [yourname, setYourName] = useState('Vous');
   const [opponentname, setOpponentName] = useState('Adversaire');
+  const [yourElo, setYourElo] = useState(0);
+  const [opponentElo, setOpponentElo] = useState(0);
 
   useEffect(() => {
     const fetchPlayerNames = async () => {
@@ -61,6 +64,15 @@ const QuizScreen = () => {
           getUserById(matchmaking.playerOneId),
           getUserById(matchmaking.playerTwoId),
         ]);
+
+        if (playerOne) {
+          setYourElo(playerOne.points);
+        }
+        if (playerTwo) {
+          setOpponentElo(playerTwo.points);
+        }
+
+
 
         if (!playerOne || !playerTwo) {
           console.error('Failed to fetch player data');
@@ -141,6 +153,14 @@ const QuizScreen = () => {
       if (playerOneScore === null || playerTwoScore === null) {
         console.error('Erreur: les scores sont incorrects ou manquants.');
         return;
+      }
+
+      if (playerOneScore > playerTwoScore) {
+        updatePoints(playerOneId, playerTwoId);
+        console.log('Points mis à jour pour le joueur 1');
+      } else if (playerTwoScore > playerOneScore) {
+        updatePoints(playerTwoId, playerOneId);
+        console.log('Points mis à jour pour le joueur 2');
       }
 
       if (playerOneScore === playerTwoScore) {
@@ -243,10 +263,10 @@ const QuizScreen = () => {
       <View style={styles.container}>
         <View style={styles.scoreContainer}>
           <Text style={styles.scoreText}>
-            {yourname} {playerScore}
+            {yourElo} points {yourname} {playerScore}
           </Text>
           <Text style={styles.scoreText}>
-            🆚 {opponentname}: {opponentScore}
+            🆚{opponentElo} points {opponentname}: {opponentScore}
           </Text>
         </View>
         <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>

@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserWithoutPassword } from './entities/user.entity';
@@ -84,5 +84,15 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Utilisateur Delete' })
   async delete(@Param('name') name: string) {
     return this.userService.delete(name);
+  }
+
+  @Patch('points')
+  @ApiOperation({ summary: 'Update un Utilisateur par son username' })
+  @ApiResponse({ status: 200, description: 'Utilisateur Update' })
+  async update(
+    @Body('winnerId') winnerId: string,
+    @Body('loserId') loserId: string,
+  ) {
+    return this.userService.updatePoint(winnerId, loserId);
   }
 }
