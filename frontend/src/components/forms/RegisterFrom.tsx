@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import {
   View,
+  Text,
   TextInput,
   StyleSheet,
-  Text,
   TouchableOpacity,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import LottieView from 'lottie-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { register } from '../../services/authService';
+import { useFonts } from 'expo-font';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -23,12 +25,15 @@ const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useFonts({
+    Modak: require('../../assets/font/Modak-Regular.ttf'),
+  });
+
   const handleRegister = async () => {
     setError('');
     setLoading(true);
 
     const registerData = { email, username, password };
-
     const success = await register(registerData);
 
     setLoading(false);
@@ -37,7 +42,6 @@ const RegisterForm = () => {
       setEmail('');
       setUsername('');
       setPassword('');
-
       navigation.navigate('Login');
     } else {
       setError(
@@ -49,7 +53,15 @@ const RegisterForm = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Culture Clash</Text>
+        {/** 
+        <LottieView
+          source={require('../../assets/animation/brain.json')}
+          autoPlay
+          loop
+          style={styles.animation}
+        />
+        */}
+        <Text style={styles.title}>CultureClash</Text>
         <Text style={styles.subtitle}>Créez votre compte</Text>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -59,14 +71,14 @@ const RegisterForm = () => {
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          placeholderTextColor="#666"
+          placeholderTextColor="rgba(255,255,255,0.8)"
         />
         <TextInput
           style={styles.input}
           placeholder="Nom d'utilisateur"
           value={username}
           onChangeText={setUsername}
-          placeholderTextColor="#666"
+          placeholderTextColor="rgba(255,255,255,0.8)"
         />
         <TextInput
           style={styles.input}
@@ -74,7 +86,7 @@ const RegisterForm = () => {
           secureTextEntry
           value={password}
           onChangeText={setPassword}
-          placeholderTextColor="#666"
+          placeholderTextColor="rgba(255,255,255,0.8)"
         />
 
         <TouchableOpacity
@@ -87,15 +99,12 @@ const RegisterForm = () => {
           </Text>
         </TouchableOpacity>
 
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Déjà inscrit ?</Text>
-          <TouchableOpacity
-            style={[styles.button, styles.loginButton]}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.buttonText}>Se connecter</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.loginContainer}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginText}>Déjà inscrit ? Se connecter</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -104,49 +113,49 @@ const RegisterForm = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#00c999',
   },
   container: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: '#00c999',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
+  animation: {
+    width: 200,
+    height: 200,
+    marginBottom: 10,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
-    color: '#6C63FF',
+    fontSize: 42,
+    fontFamily: 'Modak',
+    color: '#fff',
     marginBottom: 10,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 40,
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 20,
     textAlign: 'center',
   },
   input: {
     width: '100%',
-    height: 55,
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#6C63FF20',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 2,
+    height: 50,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.8)',
+    marginVertical: 10,
+    fontSize: 18,
+    color: '#fff',
+    paddingVertical: 8,
   },
   button: {
+    width: '100%',
     backgroundColor: '#6C63FF',
-    paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
-    width: '100%',
+    marginTop: 15,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -164,22 +173,16 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF6B6B',
+    marginVertical: 8,
     textAlign: 'center',
-    marginBottom: 15,
-    fontSize: 14,
   },
   loginContainer: {
-    marginTop: 30,
-    alignItems: 'center',
-    width: '100%',
+    marginTop: 20,
   },
   loginText: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 15,
-  },
-  loginButton: {
-    backgroundColor: '#4ECDC4',
+    color: '#fff',
+    textDecorationLine: 'underline',
   },
 });
 

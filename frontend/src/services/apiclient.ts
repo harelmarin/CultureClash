@@ -1,6 +1,5 @@
 import { refreshSession } from './authService';
-
-const BASE_URL = 'http://localhost:3000';
+import { IP_PC } from '../../config';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -23,7 +22,7 @@ export const apiClient = async <T>(
   } = options;
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${IP_PC}${endpoint}`, {
       method,
       headers: {
         'Content-Type': 'application/json',

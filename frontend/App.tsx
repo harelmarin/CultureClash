@@ -38,7 +38,7 @@ const AppContent = () => {
 
   return (
     <NavigationContainer>
-      <StatusBar style="light" />
+      <StatusBar style="light" backgroundColor="#00c999" />
       {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );

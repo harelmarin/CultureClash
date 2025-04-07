@@ -1,10 +1,9 @@
 import { Matchmaking } from '../types/matchmakingTypes';
-
-const BASE_URL = 'http://localhost:3000';
+import { IP_PC } from '../../config';
 
 export const createMatchmaking = async (): Promise<Matchmaking | boolean> => {
   try {
-    const matchmaking = await fetch(`${BASE_URL}/matchmaking`, {
+    const matchmaking = await fetch(`${IP_PC}/matchmaking`, {
       method: 'POST',
       credentials: 'include',
     });
@@ -21,7 +20,7 @@ export const createMatchmaking = async (): Promise<Matchmaking | boolean> => {
 
 export const endMatchmaking = async (): Promise<Matchmaking | boolean> => {
   try {
-    const matchmaking = await fetch(`${BASE_URL}/matchmaking)`, {
+    const matchmaking = await fetch(`${IP_PC}/matchmaking)`, {
       method: 'PATCH',
       credentials: 'include',
     });
@@ -40,7 +39,7 @@ export const getUserMatchmakingSessions = async (
   id: string,
 ): Promise<Matchmaking | boolean> => {
   try {
-    const matchmaking = await fetch(`${BASE_URL}/matchmaking/user/${id}`, {
+    const matchmaking = await fetch(`${IP_PC}/matchmaking/user/${id}`, {
       method: 'GET',
       credentials: 'include',
     });

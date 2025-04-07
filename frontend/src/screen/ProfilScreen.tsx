@@ -55,8 +55,6 @@ const ProfilScreen = () => {
             return MatchWithUsername;
           }),
         );
-
-        console.log('Historique des matchs:', MatchWithUsername);
         setMatchmakingHistory(MatchWithUsername);
       } else {
         setMatchmakingHistory(null);
@@ -81,19 +79,19 @@ const ProfilScreen = () => {
             {matchmakingHistory.map((match) => (
               <View key={match.id} style={styles.matchItem}>
                 <Text style={styles.playerText}>
-                  👤 Joueur 1 : {match.playerOneUsername}
+                  Joueur 1 : {match.playerOneUsername}
                 </Text>
                 <Text style={styles.scoreText}>
-                  ⭐ Score: {match.playerOneScore}
+                  Score: {match.playerOneScore}
                 </Text>
                 <Text style={styles.playerText}>
-                  👤 Joueur 2 : {match.playerTwoUsername}
+                  Joueur 2 : {match.playerTwoUsername}
                 </Text>
                 <Text style={styles.scoreText}>
-                  ⭐ Score: {match.playerTwoScore}
+                  Score: {match.playerTwoScore}
                 </Text>
                 <Text style={styles.dateText}>
-                  📅 Date: {new Date(match.createdAt).toLocaleDateString()}
+                  Date: {new Date(match.createdAt).toLocaleDateString()}
                 </Text>
               </View>
             ))}

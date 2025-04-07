@@ -1,7 +1,6 @@
 import { LoginData, RegisterData } from '../types/authTypes';
 import { User } from '../types/userTypes';
-
-const BASE_URL = 'http://localhost:3000';
+import { IP_PC } from '../../config';
 
 const generateSessionId = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -11,7 +10,7 @@ let currentSessionId: string | null = null;
 
 export const refreshSession = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/refresh-session`, {
+    const response = await fetch(`${IP_PC}/auth/refresh-session`, {
       method: 'GET',
       headers: {
         'X-Session-ID': currentSessionId || '',
@@ -35,7 +34,7 @@ export const register = async (
   registerData: RegisterData,
 ): Promise<boolean> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/register`, {
+    const response = await fetch(`${IP_PC}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +64,7 @@ export const register = async (
 export const login = async (loginData: LoginData): Promise<boolean> => {
   try {
     currentSessionId = generateSessionId();
-    const response = await fetch(`${BASE_URL}/auth/login`, {
+    const response = await fetch(`${IP_PC}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,7 +91,7 @@ export const login = async (loginData: LoginData): Promise<boolean> => {
 
 export const logout = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/logout`, {
+    const response = await fetch(`${IP_PC}/auth/logout`, {
       method: 'POST',
       headers: {
         'X-Session-ID': currentSessionId || '',
@@ -113,7 +112,7 @@ export const logout = async (): Promise<boolean> => {
 
 export const checkSession = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/check-session`, {
+    const response = await fetch(`${IP_PC}/auth/check-session`, {
       method: 'GET',
       headers: {
         'X-Session-ID': currentSessionId || '',
@@ -135,7 +134,7 @@ export const checkSession = async (): Promise<boolean> => {
 
 export const getSession = async (): Promise<User | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/me`, {
+    const response = await fetch(`${IP_PC}/auth/me`, {
       method: 'GET',
       headers: {
         'X-Session-ID': currentSessionId || '',
@@ -156,7 +155,7 @@ export const getSession = async (): Promise<User | null> => {
 
 export const clearSession = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/clear-session`, {
+    const response = await fetch(`${IP_PC}/auth/clear-session`, {
       method: 'POST',
       headers: {
         'X-Session-ID': currentSessionId || '',
@@ -179,7 +178,7 @@ export const clearSession = async (): Promise<boolean> => {
 
 export const getMe = async (): Promise<User | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/auth/me`, {
+    const response = await fetch(`${IP_PC}/auth/me`, {
       method: 'GET',
       headers: {
         'X-Session-ID': currentSessionId || '',

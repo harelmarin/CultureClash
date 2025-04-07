@@ -1,10 +1,11 @@
 import { UserName } from '../types/userTypes';
+import { IP_PC } from '../../config';
 
-const BASE_URL = 'http://localhost:3000';
+
 
 export const getUserById = async (id: string): Promise<UserName | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/user/${id}`, {
+    const response = await fetch(`${IP_PC }/user/${id}`, {
       method: 'GET',
       credentials: 'include',
     });
