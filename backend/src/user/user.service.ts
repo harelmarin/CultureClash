@@ -65,6 +65,8 @@ export class UserService {
           profilePic: true,
           createdAt: true,
           points: true,
+          victories: true,
+          defeats: true,
         },
       });
 
@@ -141,12 +143,19 @@ export class UserService {
       const [winnerUser, loserUser] = await this.prisma.$transaction([
         this.prisma.user.update({
           where: { id: winner },
-          data: { points: { increment: 8 } },
+          data: {
+            points: { increment: 8 },
+            victories: { increment: 1 }
+          },
         }),
         this.prisma.user.update({
           where: { id: loser },
-          data: { points: newLoserPoints },
+          data: {
+            points: newLoserPoints,
+            defeats: { increment: 1 }
+          }
         }),
+
       ]);
 
       return { winner: winnerUser, loser: loserUser };

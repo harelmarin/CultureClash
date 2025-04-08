@@ -1,16 +1,21 @@
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, SafeAreaView } from 'react-native';
 import { useState } from 'react';
 import { findFriendByUsername } from '../services/friendService';
 import { User } from '../types/userTypes';
 import { useAuth } from '../contexts/authContext';
 import { FriendRequests } from '../components/FriendRequests';
 import FriendListe from '../components/FriendListe';
+import { useFonts } from 'expo-font';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+
+  useFonts({
+    Modak: require('../assets/font/Modak-Regular.ttf'),
+  });
 
   const searchFriend = async () => {
     if (username.trim() !== '') {
@@ -61,91 +66,178 @@ const FriendScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Rechercher un joueur</Text>
-      <TextInput
-        placeholder="Entrez un nom d'utilisateur"
-        value={username}
-        onChangeText={setUsername}
-        style={styles.input}
-        onSubmitEditing={searchFriend}
-      />
-      <Button title="Rechercher" onPress={searchFriend} />
-
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Rechercher un joueur</Text>
         </View>
-      )}
 
-      {foundUser && (
-        <View style={styles.userCard}>
-          <Text style={styles.username}>{foundUser.username}</Text>
-          <Text style={styles.email}>{foundUser.email}</Text>
-
-          <Button
-            title="Ajouter en ami"
-            onPress={sendFriendRequest}
-            color="#4CAF50"
+        <View style={styles.searchContainer}>
+          <TextInput
+            placeholder="Entrez un nom d'utilisateur"
+            placeholderTextColor="rgba(255, 255, 255, 0.7)"
+            value={username}
+            onChangeText={setUsername}
+            style={styles.input}
+            onSubmitEditing={searchFriend}
           />
+          <TouchableOpacity style={styles.searchButton} onPress={searchFriend}>
+            <Text style={styles.searchButtonText}>Rechercher</Text>
+          </TouchableOpacity>
         </View>
-      )}
 
-      <FriendRequests />
-      <FriendListe />
-    </View>
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {foundUser && (
+          <View style={styles.userCard}>
+            <Text style={styles.username}>{foundUser.username}</Text>
+            <Text style={styles.email}>{foundUser.email}</Text>
+            <TouchableOpacity style={styles.addButton} onPress={sendFriendRequest}>
+              <Text style={styles.addButtonText}>Ajouter en ami</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={styles.sectionsContainer}>
+          <FriendRequests />
+          <FriendListe />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#00c999',
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  header: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    padding: 15,
+    borderRadius: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Modak',
+    color: '#fff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  searchContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 20,
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    marginTop: 10,
-    paddingHorizontal: 8,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    color: '#fff',
+    fontSize: 16,
   },
-  userCard: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
+  searchButton: {
+    backgroundColor: '#6C63FF',
+    paddingVertical: 12,
+    borderRadius: 15,
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
-  username: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  email: {
-    color: '#666',
-    marginBottom: 10,
+  searchButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   errorContainer: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
     padding: 15,
-    borderRadius: 8,
-    marginTop: 15,
+    borderRadius: 15,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: 'rgba(255, 0, 0, 0.2)',
   },
   errorText: {
-    color: '#dc2626',
+    color: '#fff',
     fontSize: 16,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  userCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  username: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: '600',
+    marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  email: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  addButton: {
+    backgroundColor: '#6C63FF',
+    paddingVertical: 12,
+    borderRadius: 15,
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  sectionsContainer: {
+    flex: 1,
   },
 });
 

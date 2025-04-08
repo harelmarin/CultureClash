@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/authContext';
 import { getPendingRequests, getUserById } from '../services/friendService';
 import { Request } from '../types/requestTypes';
 import { User } from '../types/userTypes';
 import { FriendRequestCard } from './FriendRequestCard';
+import { useFonts } from 'expo-font';
 
 interface RequestWithUser extends Request {
   sender?: User;
@@ -13,6 +14,10 @@ interface RequestWithUser extends Request {
 export const FriendRequests = () => {
   const [pendingRequests, setPendingRequests] = useState<RequestWithUser[]>([]);
   const { user } = useAuth();
+
+  useFonts({
+    Modak: require('../assets/font/Modak-Regular.ttf'),
+  });
 
   useEffect(() => {
     loadPendingRequests();
@@ -51,20 +56,28 @@ export const FriendRequests = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 20,
+    padding: 20,
     marginVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
+    fontSize: 22,
+    fontFamily: 'Modak',
+    color: '#fff',
+    marginBottom: 20,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   noRequests: {
     textAlign: 'center',
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 16,
     fontStyle: 'italic',
+    paddingVertical: 20,
   },
 }); 

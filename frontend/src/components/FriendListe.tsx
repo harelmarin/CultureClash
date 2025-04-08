@@ -1,10 +1,15 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Platform } from "react-native";
 import { useAuth } from "../contexts/authContext";
 import { useFriendsList } from "../hooks/useFriends";
+import { useFonts } from 'expo-font';
 
 const FriendListe = () => {
   const { user } = useAuth();
   const { data: friendsList = [], isLoading, error } = useFriendsList(user?.id || '');
+
+  useFonts({
+    Modak: require('../assets/font/Modak-Regular.ttf'),
+  });
 
   if (isLoading) {
     return (
@@ -26,7 +31,7 @@ const FriendListe = () => {
     <View key={follow.id} style={styles.friendCard}>
       <View style={styles.friendInfo}>
         <Text style={styles.username}>{follow.followedUser.username}</Text>
-        <Text style={styles.points}>Points: {follow.followedUser.points || 0}</Text>
+        <Text style={styles.points}>{follow.followedUser.points || 0} points</Text>
       </View>
     </View>
   ));
@@ -43,44 +48,58 @@ const FriendListe = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 20,
     padding: 20,
     marginVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   title: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#1e293b',
+    fontFamily: 'Modak',
+    color: '#fff',
     marginBottom: 20,
-    letterSpacing: 0.5,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   error: {
-    color: '#ef4444',
+    color: '#fff',
     textAlign: 'center',
     fontSize: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   noFriends: {
     textAlign: 'center',
-    color: '#64748b',
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 16,
     fontStyle: 'italic',
     paddingVertical: 20,
   },
   friendCard: {
     padding: 16,
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   friendInfo: {
     flex: 1,
@@ -88,12 +107,18 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#334155',
+    color: '#fff',
     marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   points: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#6C63FF',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
 

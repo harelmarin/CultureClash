@@ -14,6 +14,8 @@ model User {
   password               String
   points                 Int             @default(0)
   profilePic             String?
+  victories             Int             @default(0)
+  defeats               Int             @default(0)
   createdAt              DateTime        @default(now())
   sessionsAsPlayerOne    MatchmakingSession[] @relation("PlayerOneSessions")
   sessionsAsPlayerTwo    MatchmakingSession[] @relation("PlayerTwoSessions")

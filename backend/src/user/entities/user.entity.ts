@@ -45,6 +45,9 @@ export class User {
     format: 'date-time',
   })
   createdAt: Date;
+
+  victories: number;
+  defeats: number;
 }
 
 @Entity('users')
@@ -87,4 +90,7 @@ export class UserWithoutPassword {
     format: 'date-time',
   })
   createdAt: Date;
+
+  victories: number;
+  defeats: number;
 }
