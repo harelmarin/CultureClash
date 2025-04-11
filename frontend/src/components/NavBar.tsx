@@ -13,39 +13,64 @@ const BottomNavBar = () => {
 
   return (
     <View style={styles.navBar}>
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Ionicons
-          name="trophy-outline"
-          size={26}
-          color={isActive('Leaderboard') ? '#6C63FF' : '#fff'}
-        />
+      <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
+        <View
+          style={[
+            styles.iconWrapper,
+            isActive('Leaderboard') && styles.iconWrapperActive,
+          ]}
+        >
+          <Ionicons
+            name="trophy-outline"
+            size={26}
+            color={isActive('Leaderboard') ? '#fff' : '#fff'}
+          />
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Friend')}>
-        <Ionicons
-          name="people-outline"
-          size={26}
-          color={isActive('Friend') ? '#6C63FF' : '#fff'}
-        />
+        <View
+          style={[
+            styles.iconWrapper,
+            isActive('Friend') && styles.iconWrapperActive,
+          ]}
+        >
+          <Ionicons
+            name="people-outline"
+            size={26}
+            color={isActive('Friend') ? '#fff' : '#fff'}
+          />
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <View
           style={[
-            styles.homeButton,
-            isActive('Home') && styles.homeButtonActive,
+            styles.iconWrapper,
+            isActive('Home') && styles.iconWrapperActive,
           ]}
         >
-          <Ionicons name="home-outline" size={28} color="#fff" />
+          <Ionicons
+            name="home-outline"
+            size={28}
+            color={isActive('Home') ? '#fff' : '#fff'}
+          />
         </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Profil')}>
-        <Ionicons
-          name="person-outline"
-          size={26}
-          color={isActive('Profil') ? '#6C63FF' : '#fff'}
-        />
+        <View
+          style={[
+            styles.iconWrapper,
+            isActive('Profil') && styles.iconWrapperActive,
+          ]}
+        >
+          <Ionicons
+            name="person-outline"
+            size={26}
+            color={isActive('Profil') ? '#fff' : '#fff'}
+          />
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={logout}>
@@ -75,17 +100,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 10,
   },
-  homeButton: {
-    backgroundColor: '#6C63FF',
-    padding: 14,
-    borderRadius: 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 6,
+  iconWrapper: {
+    padding: 10,
+    borderRadius: 50,
   },
-  homeButtonActive: {
+  iconWrapperActive: {
     backgroundColor: '#6C63FF',
   },
 });

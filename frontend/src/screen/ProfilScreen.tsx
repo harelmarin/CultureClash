@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
   View,
   SafeAreaView,
@@ -6,16 +7,18 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/authContext';
-import { useEffect, useState } from 'react';
 import { getUserMatchmakingSessions } from '../services/matchmakingService';
 import { Matchmaking } from '../types/matchmakingTypes';
 import { getUserById } from '../services/userService';
 import { useFonts } from 'expo-font';
-import { Ionicons } from '@expo/vector-icons';
+import BottomNavBar from '../components/NavBar';
 
 const ProfilScreen = () => {
-  const [matchmakingHistory, setMatchmakingHistory] = useState<Matchmaking[] | null>(null);
+  const [matchmakingHistory, setMatchmakingHistory] = useState<
+    Matchmaking[] | null
+  >(null);
   const { user } = useAuth();
   const [profilPoint, setProfilPoint] = useState<number>(0);
   const [profilVictoire, setProfilVictoire] = useState<number>(0);
@@ -25,7 +28,6 @@ const ProfilScreen = () => {
   });
 
   useEffect(() => {
-
     const getInfo = async () => {
       if (!user?.id) return;
 
@@ -34,7 +36,7 @@ const ProfilScreen = () => {
         setProfilPoint(profileUser.points);
         setProfilVictoire(profileUser.victories);
       }
-    }
+    };
     getInfo();
 
     const fetchMatchmakingHistory = async () => {
@@ -53,7 +55,6 @@ const ProfilScreen = () => {
               if (playerOne?.username) {
                 playerOneUsername = playerOne.username;
               }
-
             }
 
             if (match.playerTwoId) {
@@ -100,6 +101,8 @@ const ProfilScreen = () => {
           <ActivityIndicator size="large" color="#fff" />
         )}
 
+        <View style={styles.separator} />
+
         {matchmakingHistory && matchmakingHistory.length > 0 ? (
           <View style={styles.historyContainer}>
             <Text style={styles.subtitle}>Historique des matchs</Text>
@@ -111,21 +114,31 @@ const ProfilScreen = () => {
                   </Text>
                   <View style={styles.matchResult}>
                     <Text style={styles.resultText}>
-                      {(match.playerOneScore ?? 0) > (match.playerTwoScore ?? 0) ? 'Victoire' : 'Défaite'}
+                      {(match.playerOneScore ?? 0) > (match.playerTwoScore ?? 0)
+                        ? 'Victoire'
+                        : 'Défaite'}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.playersContainer}>
                   <View style={styles.playerContainer}>
-                    <Text style={styles.playerName}>{match.playerOneUsername}</Text>
-                    <Text style={styles.playerScore}>{match.playerOneScore} pts</Text>
+                    <Text style={styles.playerName}>
+                      {match.playerOneUsername}
+                    </Text>
+                    <Text style={styles.playerScore}>
+                      {match.playerOneScore} pts
+                    </Text>
                   </View>
                   <View style={styles.vsContainer}>
                     <Text style={styles.vsText}>VS</Text>
                   </View>
                   <View style={styles.playerContainer}>
-                    <Text style={styles.playerName}>{match.playerTwoUsername}</Text>
-                    <Text style={styles.playerScore}>{match.playerTwoScore} pts</Text>
+                    <Text style={styles.playerName}>
+                      {match.playerTwoUsername}
+                    </Text>
+                    <Text style={styles.playerScore}>
+                      {match.playerTwoScore} pts
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -140,6 +153,7 @@ const ProfilScreen = () => {
           )
         )}
       </View>
+      <BottomNavBar />
     </SafeAreaView>
   );
 };
@@ -154,10 +168,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     padding: 25,
     borderRadius: 25,
     marginBottom: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -188,7 +202,6 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 10,
     borderRadius: 15,
     borderWidth: 1,
@@ -204,7 +217,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subtitle: {
-    fontSize: 24,
+    fontSize: 30,
     fontFamily: 'Modak',
     color: '#fff',
     marginBottom: 20,
@@ -306,6 +319,11 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginVertical: 20,
   },
 });
 

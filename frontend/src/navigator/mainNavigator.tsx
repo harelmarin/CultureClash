@@ -6,6 +6,7 @@ import ResultScreen from '../screen/ResultScreen';
 import RoomScreen from '../screen/RoomScreen';
 import FriendScreen from '../screen/FriendScreen';
 import ProfilScreen from '../screen/ProfilScreen';
+import Leaderboard from '../screen/LeaderBoard';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,16 +18,39 @@ const MainNavigator = () => {
         component={HomeScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Quiz" component={QuizScreen} />
-      <Stack.Screen name="Room" component={RoomScreen} />
-      <Stack.Screen name="Friend" component={FriendScreen} />
-      <Stack.Screen name="Profil" component={ProfilScreen} />
+      <Stack.Screen
+        name="Quiz"
+        component={QuizScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Room"
+        component={RoomScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Friend"
+        component={FriendScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profil"
+        component={ProfilScreen}
+        options={{ headerShown: false }}
+      />
 
       <Stack.Screen
         name="Result"
         component={ResultScreen as React.ComponentType<{}>}
         options={{
-          headerShown: true,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Leaderboard"
+        component={Leaderboard as React.ComponentType<{}>}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

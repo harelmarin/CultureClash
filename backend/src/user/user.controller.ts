@@ -6,7 +6,7 @@ import { UserWithoutPassword } from './entities/user.entity';
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les utilisateurs' })
@@ -24,6 +24,19 @@ export class UserController {
     return users;
   }
 
+  @Get('leaderboard')
+  @ApiOperation({
+    summary: 'Get les utilisateurs par point pour afficher dans un classement',
+  })
+  @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
+  async get() {
+    const users = await this.userService.getUserByPoint();
+    if (!users || users.length === 0) {
+      return { message: 'Utilisateur leaderboard non trouvé' };
+    }
+    return users;
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer un utilisateur par ID' })
   @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
@@ -38,8 +51,6 @@ export class UserController {
     }
     return user;
   }
-
-
 
   @Get('username/:name')
   @ApiOperation({ summary: 'Récupérer un utilisateur par username' })

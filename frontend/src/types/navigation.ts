@@ -14,6 +14,7 @@ export type RootStackParamList = {
     playerTwoScore: number;
     message: string;
   };
+  Leaderboard: undefined;
 };
 
 export type RoomScreenNavigationProp = NativeStackNavigationProp<

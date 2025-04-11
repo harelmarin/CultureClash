@@ -1,4 +1,12 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  SafeAreaView,
+} from 'react-native';
 import { useState } from 'react';
 import { findFriendByUsername } from '../services/friendService';
 import { User } from '../types/userTypes';
@@ -6,6 +14,7 @@ import { useAuth } from '../contexts/authContext';
 import { FriendRequests } from '../components/FriendRequests';
 import FriendListe from '../components/FriendListe';
 import { useFonts } from 'expo-font';
+import BottomNavBar from '../components/NavBar';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
@@ -23,7 +32,7 @@ const FriendScreen = () => {
       if (result === false) {
         setError('Utilisateur non trouvé');
         setFoundUser(null);
-        console.log("Utilisateur non trouvé");
+        console.log('Utilisateur non trouvé');
       } else {
         setFoundUser(result as User);
         setError(null);
@@ -33,8 +42,10 @@ const FriendScreen = () => {
 
   if (foundUser?.id === user?.id) {
     return (
-      <View>
-        <Text>Impossible d'ajouter ce joueur en ami</Text>
+      <View style={styles.noAddContainer}>
+        <Text style={styles.noAddText}>
+          Impossible d'ajouter ce joueur en ami
+        </Text>
       </View>
     );
   }
@@ -96,7 +107,10 @@ const FriendScreen = () => {
           <View style={styles.userCard}>
             <Text style={styles.username}>{foundUser.username}</Text>
             <Text style={styles.email}>{foundUser.email}</Text>
-            <TouchableOpacity style={styles.addButton} onPress={sendFriendRequest}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={sendFriendRequest}
+            >
               <Text style={styles.addButtonText}>Ajouter en ami</Text>
             </TouchableOpacity>
           </View>
@@ -107,6 +121,7 @@ const FriendScreen = () => {
           <FriendListe />
         </View>
       </View>
+      <BottomNavBar />
     </SafeAreaView>
   );
 };
@@ -121,24 +136,34 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    padding: 15,
-    borderRadius: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 25,
+    borderRadius: 25,
+    marginBottom: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontFamily: 'Modak',
     color: '#fff',
     textAlign: 'center',
+    marginBottom: 20,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   searchContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
     borderRadius: 20,
     marginBottom: 20,
@@ -193,12 +218,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   userCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
     borderRadius: 20,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   username: {
     fontSize: 20,
@@ -238,6 +274,18 @@ const styles = StyleSheet.create({
   },
   sectionsContainer: {
     flex: 1,
+  },
+  noAddContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noAddText: {
+    color: '#fff',
+    fontSize: 20,
+    marginTop: 15,
+    textAlign: 'center',
   },
 });
 

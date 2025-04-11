@@ -3,17 +3,14 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { User, UserWithoutPassword } from './entities/user.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { LoginDto } from 'src/auth/dto/login.dto';
-import { register } from 'node:module';
 import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async findAll(): Promise<User[]> {
     try {
@@ -126,7 +123,7 @@ export class UserService {
 
   async updatePoint(
     winner: string,
-    loser: string
+    loser: string,
   ): Promise<{ winner: User; loser: User }> {
     try {
       const checkScoreLoser = await this.prisma.user.findUnique({
@@ -138,24 +135,24 @@ export class UserService {
         throw new NotFoundException(`User ${loser} not found`);
       }
 
-      const newLoserPoints = checkScoreLoser.points < 8 ? 0 : checkScoreLoser.points - 8;
+      const newLoserPoints =
+        checkScoreLoser.points < 8 ? 0 : checkScoreLoser.points - 8;
 
       const [winnerUser, loserUser] = await this.prisma.$transaction([
         this.prisma.user.update({
           where: { id: winner },
           data: {
             points: { increment: 8 },
-            victories: { increment: 1 }
+            victories: { increment: 1 },
           },
         }),
         this.prisma.user.update({
           where: { id: loser },
           data: {
             points: newLoserPoints,
-            defeats: { increment: 1 }
-          }
+            defeats: { increment: 1 },
+          },
         }),
-
       ]);
 
       return { winner: winnerUser, loser: loserUser };
@@ -164,4 +161,21 @@ export class UserService {
     }
   }
 
+  async getUserByPoint() {
+    try {
+      const users = await this.prisma.user.findMany({
+        orderBy: {
+          points: 'desc',
+        },
+        select: {
+          id: true,
+          username: true,
+          points: true,
+        },
+      });
+      return users;
+    } catch (error) {
+      console.log('Erreur back de récupération des users par point');
+    }
+  }
 }

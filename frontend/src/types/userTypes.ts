@@ -13,3 +13,9 @@ export interface UserName {
   points: number;
   victories: number;
 }
+
+export type UserLeaderboard = {
+  id: string;
+  username: string;
+  points: number;
+};
