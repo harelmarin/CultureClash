@@ -16,7 +16,7 @@ const BottomNavBar = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Ionicons
           name="trophy-outline"
-          size={isActive('Leaderboard') ? 30 : 26}
+          size={26}
           color={isActive('Leaderboard') ? '#6C63FF' : '#fff'}
         />
       </TouchableOpacity>
@@ -24,23 +24,26 @@ const BottomNavBar = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Friend')}>
         <Ionicons
           name="people-outline"
-          size={isActive('Friend') ? 30 : 26}
+          size={26}
           color={isActive('Friend') ? '#6C63FF' : '#fff'}
         />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Ionicons
-          name="home-outline"
-          size={isActive('Home') ? 32 : 28}
-          color={isActive('Home') ? '#6C63FF' : '#fff'}
-        />
+        <View
+          style={[
+            styles.homeButton,
+            isActive('Home') && styles.homeButtonActive,
+          ]}
+        >
+          <Ionicons name="home-outline" size={28} color="#fff" />
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Profil')}>
         <Ionicons
           name="person-outline"
-          size={isActive('Profil') ? 30 : 26}
+          size={26}
           color={isActive('Profil') ? '#6C63FF' : '#fff'}
         />
       </TouchableOpacity>
@@ -59,15 +62,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 90,
-    backgroundColor: '#00a387',
+    backgroundColor: 'rgba(0, 163, 135, 0.95)',
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     elevation: 10,
-    zIndex: 100,
+  },
+  homeButton: {
+    backgroundColor: '#6C63FF',
+    padding: 14,
+    borderRadius: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  homeButtonActive: {
+    backgroundColor: '#6C63FF',
   },
 });
 

@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,10 +24,12 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.userInfoContainer}>
-        <Text style={styles.userInfoText}>
-          👤 {user?.username ?? 'Invité'} • ⭐ {user?.points ?? 0} pts
-        </Text>
+      <View style={styles.userProfileBox}>
+        <Image style={styles.avatar} />
+        <View>
+          <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
+          <Text style={styles.userPoints}>⭐ {user?.points ?? 0} pts</Text>
+        </View>
       </View>
 
       <View style={styles.container}>
@@ -37,7 +40,7 @@ const HomeScreen = () => {
           style={styles.playButton}
           onPress={() => navigation.navigate('Room')}
         >
-          <Text style={styles.playButtonText}>🎮 Jouer</Text>
+          <Text style={styles.playButtonText}>🎮 Jouer maintenant</Text>
         </TouchableOpacity>
       </View>
       <BottomNavBar />
@@ -75,34 +78,52 @@ const styles = StyleSheet.create({
   },
   playButton: {
     backgroundColor: '#6C63FF',
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderRadius: 35,
+    paddingVertical: 22,
+    paddingHorizontal: 50,
+    borderRadius: 40,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   playButtonText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  userInfoContainer: {
+  userProfileBox: {
     position: 'absolute',
     top: 100,
-    left: 40,
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    left: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  userInfoText: {
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: '#eee',
+  },
+  userName: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
+  },
+  userPoints: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
