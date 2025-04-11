@@ -12,7 +12,11 @@ const Stack = createNativeStackNavigator();
 const MainNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="Room" component={RoomScreen} />
       <Stack.Screen name="Friend" component={FriendScreen} />
