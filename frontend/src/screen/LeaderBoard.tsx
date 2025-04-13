@@ -119,7 +119,7 @@ const Leaderboard = () => {
       >
         <Text style={styles.rank}>{index + 1}</Text>
         <Text style={styles.username}>{user.username}</Text>
-        <Text style={styles.points}>Points: {user.points}</Text>
+        <Text style={styles.points}>🌟 {user.points}</Text>
       </View>
     ));
   };

@@ -15,6 +15,7 @@ import { Matchmaking } from '../types/matchmakingTypes';
 import { getUserById } from '../services/userService';
 import { useFonts } from 'expo-font';
 import BottomNavBar from '../components/NavBar';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ProfilScreen = () => {
   const [matchmakingHistory, setMatchmakingHistory] = useState<
@@ -23,63 +24,82 @@ const ProfilScreen = () => {
   const { user } = useAuth();
   const [profilPoint, setProfilPoint] = useState<number>(0);
   const [profilVictoire, setProfilVictoire] = useState<number>(0);
+  const [profilDefaite, setProfilDefaite] = useState<number>(0);
 
   useFonts({
     Modak: require('../assets/font/Modak-Regular.ttf'),
   });
+  useFocusEffect(
+    React.useCallback(() => {
+      const getInfo = async () => {
+        if (!user?.id) return;
 
-  useEffect(() => {
-    const getInfo = async () => {
-      if (!user?.id) return;
+        const profileUser = await getUserById(user.id);
+        if (profileUser) {
+          setProfilPoint(profileUser.points);
+          setProfilVictoire(profileUser.victories);
+          setProfilDefaite(profileUser.losses || 0);
+        }
+      };
+      getInfo();
 
-      const profileUser = await getUserById(user.id);
-      if (profileUser) {
-        setProfilPoint(profileUser.points);
-        setProfilVictoire(profileUser.victories);
-      }
-    };
-    getInfo();
+      const fetchMatchmakingHistory = async () => {
+        if (!user?.id) return;
 
-    const fetchMatchmakingHistory = async () => {
-      if (!user?.id) return;
+        const matches = await getUserMatchmakingSessions(user.id);
 
-      const matches = await getUserMatchmakingSessions(user.id);
+        if (Array.isArray(matches)) {
+          let victoireCount = 0;
+          let defaiteCount = 0;
 
-      if (Array.isArray(matches)) {
-        const MatchWithUsername = await Promise.all(
-          matches.map(async (match) => {
-            let playerOneUsername = 'Inconnu';
-            let playerTwoUsername = 'Inconnu';
+          const MatchWithUsername = await Promise.all(
+            matches.map(async (match) => {
+              let playerOneUsername = 'Inconnu';
+              let playerTwoUsername = 'Inconnu';
 
-            if (match.playerOneId) {
-              const playerOne = await getUserById(match.playerOneId);
-              if (playerOne?.username) {
-                playerOneUsername = playerOne.username;
+              if (match.playerOneId) {
+                const playerOne = await getUserById(match.playerOneId);
+                if (playerOne?.username) {
+                  playerOneUsername = playerOne.username;
+                }
               }
-            }
 
-            if (match.playerTwoId) {
-              const playerTwo = await getUserById(match.playerTwoId);
-              if (playerTwo?.username) {
-                playerTwoUsername = playerTwo.username;
+              if (match.playerTwoId) {
+                const playerTwo = await getUserById(match.playerTwoId);
+                if (playerTwo?.username) {
+                  playerTwoUsername = playerTwo.username;
+                }
               }
-            }
 
-            return {
-              ...match,
-              playerOneUsername,
-              playerTwoUsername,
-            };
-          }),
-        );
-        setMatchmakingHistory(MatchWithUsername);
-      } else {
-        setMatchmakingHistory(null);
-      }
-    };
+              if (match.winnerId === user.id) {
+                victoireCount += 1;
+              } else if (
+                match.playerOneId === user.id ||
+                match.playerTwoId === user.id
+              ) {
+                defaiteCount += 1;
+              }
 
-    fetchMatchmakingHistory();
-  }, [user?.id]);
+              return {
+                ...match,
+                playerOneUsername,
+                playerTwoUsername,
+              };
+            }),
+          );
+
+          setProfilVictoire((prev) => prev + victoireCount);
+          setProfilDefaite((prev) => prev + defaiteCount);
+
+          setMatchmakingHistory(MatchWithUsername);
+        } else {
+          setMatchmakingHistory(null);
+        }
+      };
+
+      fetchMatchmakingHistory();
+    }, [user?.id]),
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -92,12 +112,13 @@ const ProfilScreen = () => {
             <Text style={styles.title}>Profil de {user?.username}</Text>
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Ionicons name="trophy" size={24} color="#6C63FF" />
                 <Text style={styles.statText}>Victoires: {profilVictoire}</Text>
               </View>
               <View style={styles.statItem}>
-                <Ionicons name="star" size={24} color="#FFD700" />
-                <Text style={styles.statText}>Points: {profilPoint}</Text>
+                <Text style={styles.statText}>Défaites: {profilDefaite}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statText}>🌟{profilPoint}</Text>
               </View>
             </View>
           </View>
@@ -119,9 +140,10 @@ const ProfilScreen = () => {
                     </Text>
                     <View style={styles.matchResult}>
                       <Text style={styles.resultText}>
-                        {(match.playerOneScore ?? 0) >
-                        (match.playerTwoScore ?? 0)
+                        {match.winnerId === user.id
                           ? 'Victoire'
+                          : match.playerOneScore === match.playerTwoScore
+                          ? 'Égalité'
                           : 'Défaite'}
                       </Text>
                     </View>
@@ -174,7 +196,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
   },
-
   header: {
     padding: 25,
     borderRadius: 25,

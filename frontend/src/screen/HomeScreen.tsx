@@ -28,7 +28,7 @@ const HomeScreen = () => {
         <Image style={styles.avatar} />
         <View>
           <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
-          <Text style={styles.userPoints}>⭐ {user?.points ?? 0} pts</Text>
+          <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
         </View>
       </View>
 
@@ -128,4 +128,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-

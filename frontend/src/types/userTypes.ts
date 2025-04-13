@@ -8,6 +8,7 @@ export interface User {
 }
 
 export interface UserName {
+  losses: number;
   id: string;
   username: string;
   points: number;

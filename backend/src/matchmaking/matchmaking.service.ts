@@ -119,9 +119,17 @@ export class MatchmakingService {
     if (!userWithMatchmakingSessions) {
       throw new Error('Utilisateur non trouvé');
     }
-    return [
+
+    const combinedSessions = [
       ...userWithMatchmakingSessions.sessionsAsPlayerOne,
       ...userWithMatchmakingSessions.sessionsAsPlayerTwo,
     ];
+
+    const sortedSessions = combinedSessions.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    return sortedSessions;
   };
 }
