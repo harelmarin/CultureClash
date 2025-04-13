@@ -15,6 +15,8 @@ import { FriendRequests } from '../components/FriendRequests';
 import FriendListe from '../components/FriendListe';
 import { useFonts } from 'expo-font';
 import BottomNavBar from '../components/NavBar';
+import { ScrollView } from 'react-native';
+import { IP_PC } from '../../config';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
@@ -54,7 +56,7 @@ const FriendScreen = () => {
     if (!foundUser || !user) return;
 
     try {
-      const response = await fetch('http://localhost:3000/friend-request', {
+      const response = await fetch(`${IP_PC}/friend-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +80,10 @@ const FriendScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Rechercher un joueur</Text>
         </View>
@@ -120,7 +125,7 @@ const FriendScreen = () => {
           <FriendRequests />
           <FriendListe />
         </View>
-      </View>
+      </ScrollView>
       <BottomNavBar />
     </SafeAreaView>
   );

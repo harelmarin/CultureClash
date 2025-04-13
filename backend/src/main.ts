@@ -7,7 +7,6 @@ import { SeedService } from '../prisma/seed/seed.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuration CORS détaillée
   app.enableCors({
     origin: [
       'http://localhost:3000',
@@ -21,12 +20,12 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
   });
 
-  // Configuration de WebSocket
+  // WebSockeet
   app.useWebSocketAdapter(new IoAdapter(app));
 
   const seedService = app.get(SeedService);
 
-  // Configuration de Swagger
+  // Swagger
   const config = new DocumentBuilder()
     .setTitle('Culture Clash API')
     .setBasePath('api')

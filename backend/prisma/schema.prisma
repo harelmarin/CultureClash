@@ -68,6 +68,7 @@ model Follows {
   createdAt         DateTime       @default(now())
   followingUser     User           @relation("FollowingUser", fields: [followingUserId], references: [id])
   followedUser      User           @relation("FollowedUser", fields: [followedUserId], references: [id])
+  
 }
 
 model FriendRequest {

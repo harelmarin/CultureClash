@@ -6,6 +6,7 @@ import {
   Text,
   ActivityIndicator,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/authContext';
@@ -82,77 +83,84 @@ const ProfilScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Profil de {user?.username}</Text>
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Ionicons name="trophy" size={24} color="#6C63FF" />
-              <Text style={styles.statText}>Victoires: {profilVictoire}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Ionicons name="star" size={24} color="#FFD700" />
-              <Text style={styles.statText}>Points: {profilPoint}</Text>
-            </View>
-          </View>
-        </View>
-
-        {matchmakingHistory === null && (
-          <ActivityIndicator size="large" color="#fff" />
-        )}
-
-        <View style={styles.separator} />
-
-        {matchmakingHistory && matchmakingHistory.length > 0 ? (
-          <View style={styles.historyContainer}>
-            <Text style={styles.subtitle}>Historique des matchs</Text>
-            {matchmakingHistory.map((match) => (
-              <View key={match.id} style={styles.matchItem}>
-                <View style={styles.matchHeader}>
-                  <Text style={styles.matchDate}>
-                    {new Date(match.createdAt).toLocaleDateString()}
-                  </Text>
-                  <View style={styles.matchResult}>
-                    <Text style={styles.resultText}>
-                      {(match.playerOneScore ?? 0) > (match.playerTwoScore ?? 0)
-                        ? 'Victoire'
-                        : 'Défaite'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.playersContainer}>
-                  <View style={styles.playerContainer}>
-                    <Text style={styles.playerName}>
-                      {match.playerOneUsername}
-                    </Text>
-                    <Text style={styles.playerScore}>
-                      {match.playerOneScore} pts
-                    </Text>
-                  </View>
-                  <View style={styles.vsContainer}>
-                    <Text style={styles.vsText}>VS</Text>
-                  </View>
-                  <View style={styles.playerContainer}>
-                    <Text style={styles.playerName}>
-                      {match.playerTwoUsername}
-                    </Text>
-                    <Text style={styles.playerScore}>
-                      {match.playerTwoScore} pts
-                    </Text>
-                  </View>
-                </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
+          <View style={styles.header}>
+            <Text style={styles.title}>Profil de {user?.username}</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Ionicons name="trophy" size={24} color="#6C63FF" />
+                <Text style={styles.statText}>Victoires: {profilVictoire}</Text>
               </View>
-            ))}
-          </View>
-        ) : (
-          matchmakingHistory !== null && (
-            <View style={styles.noMatchContainer}>
-              <Ionicons name="sad-outline" size={48} color="#fff" />
-              <Text style={styles.noMatchText}>Aucun match trouvé</Text>
+              <View style={styles.statItem}>
+                <Ionicons name="star" size={24} color="#FFD700" />
+                <Text style={styles.statText}>Points: {profilPoint}</Text>
+              </View>
             </View>
-          )
-        )}
-      </View>
+          </View>
+
+          {matchmakingHistory === null && (
+            <ActivityIndicator size="large" color="#fff" />
+          )}
+
+          <View style={styles.separator} />
+
+          {matchmakingHistory && matchmakingHistory.length > 0 ? (
+            <>
+              <Text style={styles.subtitle}>Historique des matchs</Text>
+              {matchmakingHistory.map((match) => (
+                <View key={match.id} style={styles.matchItem}>
+                  <View style={styles.matchHeader}>
+                    <Text style={styles.matchDate}>
+                      {new Date(match.createdAt).toLocaleDateString()}
+                    </Text>
+                    <View style={styles.matchResult}>
+                      <Text style={styles.resultText}>
+                        {(match.playerOneScore ?? 0) >
+                        (match.playerTwoScore ?? 0)
+                          ? 'Victoire'
+                          : 'Défaite'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.playersContainer}>
+                    <View style={styles.playerContainer}>
+                      <Text style={styles.playerName}>
+                        {match.playerOneUsername}
+                      </Text>
+                      <Text style={styles.playerScore}>
+                        {match.playerOneScore} pts
+                      </Text>
+                    </View>
+                    <View style={styles.vsContainer}>
+                      <Text style={styles.vsText}>VS</Text>
+                    </View>
+                    <View style={styles.playerContainer}>
+                      <Text style={styles.playerName}>
+                        {match.playerTwoUsername}
+                      </Text>
+                      <Text style={styles.playerScore}>
+                        {match.playerTwoScore} pts
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </>
+          ) : (
+            matchmakingHistory !== null && (
+              <View style={styles.noMatchContainer}>
+                <Ionicons name="sad-outline" size={48} color="#fff" />
+                <Text style={styles.noMatchText}>Aucun match trouvé</Text>
+              </View>
+            )
+          )}
+        </View>
+        <View style={{ height: 120 }} />
+      </ScrollView>
       <BottomNavBar />
     </SafeAreaView>
   );
@@ -163,10 +171,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#00c999',
   },
-  container: {
-    flex: 1,
-    padding: 20,
+  scrollContent: {
+    paddingHorizontal: 20,
   },
+
   header: {
     padding: 25,
     borderRadius: 25,
@@ -212,9 +220,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 8,
     fontWeight: '600',
-  },
-  historyContainer: {
-    flex: 1,
   },
   subtitle: {
     fontSize: 30,

@@ -12,6 +12,7 @@ export interface Follow {
   status: string;
   createdAt: string;
   followedUser: User;
+  points: number;
 }
 
 export const findFriendByUsername = async (
