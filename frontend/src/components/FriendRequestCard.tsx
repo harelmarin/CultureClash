@@ -1,14 +1,26 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { Request } from '../types/requestTypes';
 import { User } from '../types/userTypes';
-import { useAcceptFriendRequest, useRejectFriendRequest } from '../hooks/useFriends';
+import {
+  useAcceptFriendRequest,
+  useRejectFriendRequest,
+} from '../hooks/useFriends';
 
 interface FriendRequestCardProps {
   request: Request & { sender?: User };
   onRequestHandled: () => void;
 }
 
-export const FriendRequestCard = ({ request, onRequestHandled }: FriendRequestCardProps) => {
+export const FriendRequestCard = ({
+  request,
+  onRequestHandled,
+}: FriendRequestCardProps) => {
   const acceptMutation = useAcceptFriendRequest();
   const rejectMutation = useRejectFriendRequest();
 
@@ -25,7 +37,7 @@ export const FriendRequestCard = ({ request, onRequestHandled }: FriendRequestCa
   return (
     <View style={styles.card}>
       <Text style={styles.username}>
-        De: {request.sender?.username || 'Utilisateur inconnu'}
+        {request.sender?.username || 'Utilisateur inconnu'}
       </Text>
       <Text style={styles.email}>{request.sender?.email}</Text>
       <View style={styles.buttonContainer}>
@@ -54,21 +66,38 @@ export const FriendRequestCard = ({ request, onRequestHandled }: FriendRequestCa
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
-    marginVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 20,
+    borderRadius: 20,
+    marginVertical: 10,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   username: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
     marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   email: {
-    color: '#666',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 10,
+    fontStyle: 'italic',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -76,20 +105,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     flex: 0.48,
   },
   acceptButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'rgba(108, 255, 181, 0.9)',
+    borderColor: '#00c999',
+    borderWidth: 1,
   },
   rejectButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: 'rgba(255, 99, 132, 0.9)',
+    borderColor: '#ff4e6a',
+    borderWidth: 1,
   },
   buttonText: {
     color: '#fff',
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
-}); 
+});

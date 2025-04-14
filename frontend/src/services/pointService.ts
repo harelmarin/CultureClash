@@ -1,13 +1,16 @@
-const BASE_URL = 'http://localhost:3000';
+import { IP_PC } from '../../config';
 
 interface PlayerId {
   winnerId: string;
   loserId: string;
 }
 
-export const updatePoints = async (winnerId: PlayerId, loserId: PlayerId): Promise<void> => {
+export const updatePoints = async (
+  winnerId: PlayerId,
+  loserId: PlayerId,
+): Promise<void> => {
   try {
-    const response = await fetch(`${BASE_URL}/user/points`, {
+    const response = await fetch(`${IP_PC}/user/points`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -24,4 +27,4 @@ export const updatePoints = async (winnerId: PlayerId, loserId: PlayerId): Promi
   } catch (error) {
     console.error('Erreur lors de la mise à jour des points:', error);
   }
-}
+};

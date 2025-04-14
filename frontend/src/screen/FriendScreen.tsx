@@ -43,13 +43,8 @@ const FriendScreen = () => {
   };
 
   if (foundUser?.id === user?.id) {
-    return (
-      <View style={styles.noAddContainer}>
-        <Text style={styles.noAddText}>
-          Impossible d'ajouter ce joueur en ami
-        </Text>
-      </View>
-    );
+    setFoundUser(null);
+    setError("Impossible d'ajouter ce joueur en ami");
   }
 
   const sendFriendRequest = async () => {
