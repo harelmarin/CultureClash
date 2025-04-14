@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screen/HomeScreen';
 import QuizScreen from '../screen/QuizScreen';
 import ResultScreen from '../screen/ResultScreen';
-import RoomScreen from '../screen/RoomScreen';
 import FriendScreen from '../screen/FriendScreen';
 import ProfilScreen from '../screen/ProfilScreen';
 import Leaderboard from '../screen/LeaderBoard';
@@ -23,11 +22,7 @@ const MainNavigator = () => {
         component={QuizScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Room"
-        component={RoomScreen}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="Friend"
         component={FriendScreen}

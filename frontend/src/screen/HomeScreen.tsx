@@ -1,46 +1,187 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  StyleSheet,
   View,
   Text,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
   TouchableOpacity,
-  Platform,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RoomScreenNavigationProp } from '../types/navigation';
 import { useAuth } from '../contexts/authContext';
-import { useFonts } from 'expo-font';
+import { useSocket } from '../contexts/socketContext';
 import BottomNavBar from '../components/NavBar';
 
 const HomeScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
   const { user } = useAuth();
+  const socket = useSocket();
 
-  useFonts({
-    Modak: require('../assets/font/Modak-Regular.ttf'),
-  });
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [isPlayer1, setIsPlayer1] = useState<boolean | null>(null);
+  const [timer, setTimer] = useState<number | null>(null);
+  const [isInQueue, setIsInQueue] = useState(false);
+  const [hasAccepted, setHasAccepted] = useState(false);
+  const [matchStarted, setMatchStarted] = useState(false);
+  const [queueTime, setQueueTime] = useState(0); // Timer pour la queue
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    console.log('✅ HomeScreen connecté au WebSocket :', socket.id);
+
+    socket.on('matchFound', (data) => {
+      console.log('🎮 Match trouvé !', data);
+      setRoomId(data.roomId);
+      setTimer(data.timeToAccept);
+      setHasAccepted(false);
+    });
+
+    socket.on('gameStart', (data) => {
+      setIsPlayer1(data.isPlayer1);
+      setMatchStarted(true);
+      setIsInQueue(false);
+      setHasAccepted(false);
+
+      if (data.roomId) {
+        navigation.navigate('Quiz', {
+          roomId: data.roomId,
+          matchmaking: data.matchmaking,
+        });
+      }
+    });
+
+    socket.on('matchTimeout', () => {
+      console.log('⏰ Le match a expiré');
+      resetState();
+    });
+
+    socket.on('playerLeft', () => {
+      console.log('👋 Un joueur a quitté le match');
+      resetState();
+    });
+
+    return () => {
+      socket.off('matchFound');
+      socket.off('gameStart');
+      socket.off('matchTimeout');
+      socket.off('playerLeft');
+    };
+  }, [socket, navigation]);
+
+  useEffect(() => {
+    if (isInQueue && queueTime >= 0) {
+      countdownRef.current = setInterval(() => {
+        setQueueTime((prevTime) => prevTime + 1);
+      }, 1000);
+    } else if (!isInQueue && countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, [isInQueue]);
+
+  const resetState = () => {
+    setRoomId(null);
+    setIsPlayer1(null);
+    setTimer(null);
+    setIsInQueue(false);
+    setHasAccepted(false);
+    setQueueTime(0); // Reset du timer
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+  };
+
+  const joinQueue = () => {
+    if (user && user.id && socket) {
+      socket.emit('joinQueue', { userId: user.id });
+      setIsInQueue(true);
+      console.log(
+        `📥 Demande d'entrée dans la file d'attente avec userId: ${user.id}`,
+      );
+    } else {
+      Alert.alert(
+        'Non connecté',
+        'Vous devez être connecté pour rejoindre une partie',
+        [{ text: 'OK' }],
+      );
+    }
+  };
+
+  const leaveQueue = () => {
+    if (timer !== null && timer > 0) return;
+    socket?.emit('leaveQueue');
+    resetState();
+    console.log("📤 Sortie de la file d'attente.");
+  };
+
+  const acceptMatch = () => {
+    if (roomId && socket) {
+      socket.emit('acceptMatch', { roomId });
+      setHasAccepted(true);
+      console.log('✅ Match accepté');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.userProfileBox}>
-        <Image style={styles.avatar} />
-        <View>
-          <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
-          <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
-        </View>
+        <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
+        <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
       </View>
 
       <View style={styles.container}>
         <Text style={styles.title}>CultureClash</Text>
-        <Text style={styles.subtitle}>Testez votre culture générale</Text>
+
+        {isInQueue && !roomId && (
+          <View style={styles.queueContainer}>
+            <ActivityIndicator size="large" color="#3498db" />
+            <Text style={styles.queueText}>
+              Temps dans la file : {queueTime}s
+            </Text>
+          </View>
+        )}
+
+        {roomId && (
+          <View style={styles.matchContainer}>
+            <Text style={styles.roomText}>🎮 Match trouvé !</Text>
+            {timer !== null && timer > 0 ? (
+              <View style={styles.timerContainer}>
+                <Text style={styles.timerText}>⏳ {timer}</Text>
+                {!hasAccepted && (
+                  <Button
+                    title="Accepter le match"
+                    onPress={acceptMatch}
+                    color="#2ecc71"
+                  />
+                )}
+                {hasAccepted && (
+                  <Text style={styles.acceptedText}>✅ Match accepté</Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.startContainer}>
+                <Text style={styles.startText}>🚀 La partie commence !</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.playButton}
-          onPress={() => navigation.navigate('Room')}
+          onPress={isInQueue ? leaveQueue : joinQueue}
         >
-          <Text style={styles.playButtonText}>🎮 Jouer maintenant</Text>
+          <Text style={styles.playButtonText}>
+            {isInQueue ? 'Annuler' : '🎮 Jouer maintenant'}
+          </Text>
         </TouchableOpacity>
       </View>
       <BottomNavBar />
@@ -69,12 +210,107 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  subtitle: {
+  queueContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  queueText: {
+    fontSize: 20,
+    color: '#3498db',
+    fontWeight: 'bold',
+    marginTop: 15,
+  },
+  matchContainer: {
+    alignItems: 'center',
+    backgroundColor: '#2ecc71', // Vert vif pour attirer l'attention
+    padding: 25,
+    borderRadius: 15,
+    elevation: 5,
+    marginBottom: 20,
+    width: '90%', // Taille de la carte de match pour qu'elle soit plus large
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+  },
+  roomText: {
+    fontSize: 26,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  roomIdText: {
     fontSize: 18,
     color: '#fff',
-    marginBottom: 40,
+    marginBottom: 15,
     textAlign: 'center',
-    opacity: 0.9,
+  },
+  timerContainer: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 12,
+    marginVertical: 15,
+    alignItems: 'center',
+    width: '100%',
+  },
+  timerText: {
+    fontSize: 24,
+    color: '#e74c3c',
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  acceptedText: {
+    fontSize: 18,
+    color: '#2ecc71',
+    fontWeight: 'bold',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  startContainer: {
+    backgroundColor: '#3498db',
+    padding: 20,
+    borderRadius: 12,
+    marginVertical: 15,
+    width: '100%',
+    alignItems: 'center',
+  },
+  startText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 20,
+    gap: 10,
+  },
+  userProfileBox: {
+    position: 'absolute',
+    top: 100,
+    left: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  userName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  userPoints: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '500',
   },
   playButton: {
     backgroundColor: '#6C63FF',
@@ -92,38 +328,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  userProfileBox: {
-    position: 'absolute',
-    top: 100,
-    left: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-    backgroundColor: '#eee',
-  },
-  userName: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  userPoints: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: '500',
   },
 });
 

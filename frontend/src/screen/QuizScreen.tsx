@@ -38,6 +38,7 @@ const QuizScreen = () => {
   const socket = useSocket();
   const route = useRoute<QuizScreenRouteProp>();
   const { roomId, matchmaking } = route.params;
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<Question[]>(
     matchmaking?.questions || [],
@@ -65,19 +66,10 @@ const QuizScreen = () => {
           getUserById(matchmaking.playerTwoId),
         ]);
 
-        if (playerOne) {
-          setYourElo(playerOne.points);
-        }
-        if (playerTwo) {
-          setOpponentElo(playerTwo.points);
-        }
+        if (playerOne) setYourElo(playerOne.points);
+        if (playerTwo) setOpponentElo(playerTwo.points);
 
-
-
-        if (!playerOne || !playerTwo) {
-          console.error('Failed to fetch player data');
-          return;
-        }
+        if (!playerOne || !playerTwo) return;
 
         setYourName(
           user.id === playerOne.id ? playerOne.username : playerTwo.username,
@@ -133,9 +125,11 @@ const QuizScreen = () => {
       socket.off('updateQuestion');
     };
   }, [socket]);
+
   const handleTimeout = () => {
     setTimeout(() => {
       if (isGameOver) return;
+
       const playerOneId = matchmaking?.playerOneId;
       const playerTwoId = matchmaking?.playerTwoId;
 
@@ -150,59 +144,34 @@ const QuizScreen = () => {
         playerTwoScore = playerScore;
       }
 
-      if (playerOneScore === null || playerTwoScore === null) {
-        console.error('Erreur: les scores sont incorrects ou manquants.');
-        return;
-      }
+      if (playerOneScore === null || playerTwoScore === null) return;
 
       if (playerOneScore > playerTwoScore) {
         updatePoints(playerOneId, playerTwoId);
-        console.log('Points mis à jour pour le joueur 1');
       } else if (playerTwoScore > playerOneScore) {
         updatePoints(playerTwoId, playerOneId);
-        console.log('Points mis à jour pour le joueur 2');
       }
 
-      if (playerOneScore === playerTwoScore) {
-        socket.emit('quizFinished', {
-          roomId,
-          playerOneScore,
-          playerTwoScore,
-          winnerId: 'égalité',
-        });
-      } else if (playerOneScore > playerTwoScore) {
-        socket.emit('quizFinished', {
-          roomId,
-          playerOneScore,
-          playerTwoScore,
-          winnerId: playerOneId,
-        });
-      } else if (playerTwoScore > playerOneScore) {
-        socket.emit('quizFinished', {
-          roomId,
-          playerOneScore,
-          playerTwoScore,
-          winnerId: playerTwoId,
-        });
-      }
+      socket.emit('quizFinished', {
+        roomId,
+        playerOneScore,
+        playerTwoScore,
+        winnerId:
+          playerOneScore === playerTwoScore
+            ? 'égalité'
+            : playerOneScore > playerTwoScore
+            ? playerOneId
+            : playerTwoId,
+      });
     }, 100);
   };
 
   useEffect(() => {
-    interface GameOverData {
-      winnerId: string | null;
-    }
-
-    interface User {
-      id: string;
-      username: string;
-    }
-
-    const handleGameOver = (data: GameOverData) => {
+    const handleGameOver = (data: { winnerId: string | null }) => {
       const winnerId = data.winnerId;
 
       if (winnerId && winnerId !== 'égalité') {
-        getUserById(winnerId).then((winnerUser: User | null) => {
+        getUserById(winnerId).then((winnerUser) => {
           if (winnerUser) {
             setWinner(winnerUser.username);
           }
@@ -232,10 +201,10 @@ const QuizScreen = () => {
     if (selectedAnswer !== null) return;
 
     setSelectedAnswer(isCorrect);
-
     let newScore = playerScore;
+
     if (isCorrect) {
-      newScore = playerScore + timeLeft;
+      newScore += timeLeft;
     }
 
     setPlayerScore(newScore);
@@ -260,15 +229,18 @@ const QuizScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🏆 Scores</Text>
         <View style={styles.scoreContainer}>
           <Text style={styles.scoreText}>
-            {yourElo} points {yourname} {playerScore}
+            {yourElo} pts {yourname}: {playerScore}
           </Text>
           <Text style={styles.scoreText}>
-            🆚{opponentElo} points {opponentname}: {opponentScore}
+            🆚 {opponentElo} pts {opponentname}: {opponentScore}
           </Text>
         </View>
+      </View>
+      <View style={styles.container2}>
         <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
@@ -293,22 +265,22 @@ const QuizScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
-        <GameOverModal
-          isOpen={isGameOver}
-          winner={winner}
-          playerOneScore={playerScore}
-          playerTwoScore={opponentScore}
-          yourName={yourname}
-          OpponentName={opponentname}
-          onClose={() => setIsGameOver(false)}
-        />
       </View>
+      <GameOverModal
+        isOpen={isGameOver}
+        winner={winner}
+        playerOneScore={playerScore}
+        playerTwoScore={opponentScore}
+        yourName={yourname}
+        OpponentName={opponentname}
+        onClose={() => setIsGameOver(false)}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1 },
   container: { flex: 1, padding: 20 },
   timer: {
     fontSize: 18,
@@ -317,26 +289,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  header: {
+    backgroundColor: '#00c999',
+    paddingTop: 100,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fefefe',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
   progress: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
+  container2: {
+    paddingTop: 160,
+    flex: 1,
+    paddingHorizontal: 20,
+    backgroundColor: 'fefefe',
+  },
   questionContainer: {
-    backgroundColor: '#f8f9fa',
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: { elevation: 5 },
-    }),
   },
   questionText: {
     fontSize: 20,
