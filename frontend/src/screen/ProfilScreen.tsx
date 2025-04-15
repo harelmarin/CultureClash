@@ -105,8 +105,10 @@ const ProfilScreen = () => {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Profil de {user?.username}</Text>
+        </View>
 
-          <View style={styles.statsGrid}>
+        <View>
+          <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>Victoires</Text>
               <Text style={styles.statValue}>{profilVictoire}</Text>
@@ -115,38 +117,42 @@ const ProfilScreen = () => {
               <Text style={styles.statLabel}>Défaites</Text>
               <Text style={styles.statValue}>{profilDefaite}</Text>
             </View>
+          </View>
+
+          <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>Égalités</Text>
               <Text style={styles.statValue}>{profilEgalite}</Text>
             </View>
-
             <View style={styles.statCard}>
               <Text style={styles.statValue}>🌟{profilPoint}</Text>
             </View>
           </View>
+        </View>
 
-          {matchmakingHistory === null && (
-            <ActivityIndicator size="large" color="#fff" />
-          )}
+        {matchmakingHistory === null && (
+          <ActivityIndicator size="large" color="#fff" />
+        )}
 
-          <View style={styles.separator} />
+        <View style={styles.separator} />
 
-          {matchmakingHistory && matchmakingHistory.length > 0 ? (
-            <>
-              <Text style={styles.subtitle}>Historique des matchs</Text>
-              {matchmakingHistory.map((match) => {
-                let resultColor = '#fff';
-                let backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        {matchmakingHistory && matchmakingHistory.length > 0 ? (
+          <>
+            <Text style={styles.subtitle}>Historique des matchs</Text>
+            {matchmakingHistory.map((match) => {
+              let resultColor = '#fff';
+              let backgroundColor = 'rgba(255, 255, 255, 0.1)';
 
-                if (match.winnerId === user.id) {
-                  resultColor = '#6C63FF';
-                } else if (match.playerOneScore === match.playerTwoScore) {
-                  resultColor = '#B0BEC5';
-                } else {
-                  resultColor = '#F44336';
-                }
+              if (match.winnerId === user.id) {
+                resultColor = '#6C63FF';
+              } else if (match.playerOneScore === match.playerTwoScore) {
+                resultColor = '#B0BEC5';
+              } else {
+                resultColor = '#F44336';
+              }
 
-                return (
+              return (
+                <View>
                   <View
                     key={match.id}
                     style={[styles.matchItem, { backgroundColor }]}
@@ -189,20 +195,20 @@ const ProfilScreen = () => {
                       </View>
                     </View>
                   </View>
-                );
-              })}
-            </>
-          ) : (
-            matchmakingHistory !== null && (
-              <View style={styles.noMatchContainer}>
-                <Ionicons name="sad-outline" size={48} color="#fff" />
-                <Text style={styles.noMatchText}>Aucun match trouvé</Text>
-              </View>
-            )
-          )}
-        </View>
-        <View style={{ height: 120 }} />
+                </View>
+              );
+            })}
+          </>
+        ) : (
+          matchmakingHistory !== null && (
+            <View style={styles.noMatchContainer}>
+              <Ionicons name="sad-outline" size={48} color="#fff" />
+              <Text style={styles.noMatchText}>Aucun match trouvé</Text>
+            </View>
+          )
+        )}
       </ScrollView>
+
       <BottomNavBar />
     </SafeAreaView>
   );
@@ -215,6 +221,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingBottom: 80,
   },
   header: {
     padding: 25,
@@ -243,15 +250,13 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    gap: 10,
+    justifyContent: 'space-evenly',
+    marginBottom: 10,
   },
+
   statCard: {
-    flexBasis: '48%',
     padding: 15,
     borderRadius: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -260,6 +265,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    width: 120,
   },
   statLabel: {
     color: '#6C63FF',
@@ -272,7 +278,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginVertical: 20,
+  },
   subtitle: {
     fontSize: 24,
     fontFamily: 'Modak',
@@ -321,8 +331,8 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 16,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   playersContainer: {
     flexDirection: 'row',
@@ -352,11 +362,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginVertical: 20,
   },
   noMatchContainer: {
     justifyContent: 'center',

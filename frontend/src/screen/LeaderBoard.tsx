@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   scrollContainer: {
-    marginBottom: 60,
+    marginBottom: 40,
   },
   userCard: {
     backgroundColor: 'rgba(0, 0, 0, 0.1)',

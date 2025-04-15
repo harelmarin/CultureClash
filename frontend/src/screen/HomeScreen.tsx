@@ -29,6 +29,7 @@ const HomeScreen = () => {
   const [hasAccepted, setHasAccepted] = useState(false);
   const [matchStarted, setMatchStarted] = useState(false);
   const [queueTime, setQueueTime] = useState(0);
+  const [showModal, setShowModal] = useState(false);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -38,9 +39,12 @@ const HomeScreen = () => {
 
     socket.on('matchFound', (data) => {
       console.log('🎮 Match trouvé !', data);
-      setRoomId(data.roomId);
-      setTimer(data.timeToAccept);
-      setHasAccepted(false);
+      if (!hasAccepted) {
+        setRoomId(data.roomId);
+        setTimer(data.timeToAccept);
+        setHasAccepted(false);
+        setShowModal(true);
+      }
     });
 
     socket.on('gameStart', (data) => {
@@ -48,7 +52,7 @@ const HomeScreen = () => {
       setMatchStarted(true);
       setIsInQueue(false);
       setHasAccepted(false);
-
+      setShowModal(false);
       if (data.roomId) {
         navigation.navigate('Quiz', {
           roomId: data.roomId,
@@ -84,8 +88,7 @@ const HomeScreen = () => {
       socket.off('playerLeft');
       socket.off('matchRefused');
     };
-  }, [socket, navigation]);
-
+  }, [socket, navigation, hasAccepted]);
   useEffect(() => {
     if (isInQueue && queueTime >= 0) {
       countdownRef.current = setInterval(() => {
@@ -140,6 +143,7 @@ const HomeScreen = () => {
     if (roomId && socket) {
       socket.emit('acceptMatch', { roomId });
       setHasAccepted(true);
+      setShowModal(false); // Cache la modale une fois que le match est accepté
       console.log('✅ Match accepté');
     }
   };
@@ -148,6 +152,7 @@ const HomeScreen = () => {
     if (roomId && socket) {
       socket.emit('refuseMatch', { roomId });
       resetState();
+      setShowModal(false);
     }
   };
 
@@ -179,7 +184,7 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
       <BottomNavBar />
-      {roomId && timer !== null && !hasAccepted && (
+      {roomId && timer !== null && !hasAccepted && showModal && (
         <Modal animationType="fade" transparent={true} visible={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>

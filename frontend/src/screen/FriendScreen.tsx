@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Platform,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { useState } from 'react';
 import { findFriendByUsername } from '../services/friendService';
@@ -15,13 +16,12 @@ import { FriendRequests } from '../components/FriendRequests';
 import FriendListe from '../components/FriendListe';
 import { useFonts } from 'expo-font';
 import BottomNavBar from '../components/NavBar';
-import { ScrollView } from 'react-native';
 import { IP_PC } from '../../config';
+import Toast from 'react-native-toast-message';
 
 const FriendScreen = () => {
   const [username, setUsername] = useState('');
   const [foundUser, setFoundUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   useFonts({
@@ -32,24 +32,29 @@ const FriendScreen = () => {
     if (username.trim() !== '') {
       const result = await findFriendByUsername(username);
       if (result === false) {
-        setError('Utilisateur non trouvé');
+        Toast.show({
+          type: 'error',
+          text1: 'Utilisateur non trouvé',
+          text2: "Aucun utilisateur trouvé avec ce nom d'utilisateur.",
+        });
         setFoundUser(null);
-        console.log('Utilisateur non trouvé');
       } else {
         setFoundUser(result as User);
-        setError(null);
       }
     }
   };
 
-  if (foundUser?.id === user?.id) {
-    setFoundUser(null);
-    setError("Impossible d'ajouter ce joueur en ami");
-  }
-
   const sendFriendRequest = async () => {
     if (!foundUser || !user) return;
 
+    if (foundUser.id === user.id) {
+      Toast.show({
+        type: 'error',
+        text1: "Impossible d'ajouter ce joueur en ami",
+        text2: "Vous ne pouvez pas envoyer une demande d'ami à vous-même.",
+      });
+      return;
+    }
     try {
       const response = await fetch(`${IP_PC}/friend-request`, {
         method: 'POST',
@@ -63,21 +68,35 @@ const FriendScreen = () => {
       });
 
       if (response.ok) {
-        setError("Demande d'ami envoyée avec succès!");
+        Toast.show({
+          type: 'success',
+          text1: "Demande d'ami envoyée",
+          text2: "Votre demande d'ami a été envoyée avec succès!",
+        });
         setFoundUser(null);
       } else {
-        setError("Erreur lors de l'envoi de la demande d'ami");
+        Toast.show({
+          type: 'error',
+          text1: "Erreur lors de l'envoi",
+          text2:
+            "Une erreur s'est produite lors de l'envoi de la demande d'ami.",
+        });
       }
     } catch (err) {
-      setError('Erreur de connexion au serveur');
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur de connexion',
+        text2: 'Impossible de se connecter au serveur.',
+      });
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }} // Assurer que le ScrollView prend toute la place
       >
         <View style={styles.header}>
           <Text style={styles.title}>Rechercher un joueur</Text>
@@ -97,12 +116,6 @@ const FriendScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
         {foundUser && (
           <View style={styles.userCard}>
             <Text style={styles.username}>{foundUser.username}</Text>
@@ -121,6 +134,7 @@ const FriendScreen = () => {
           <FriendListe />
         </View>
       </ScrollView>
+
       <BottomNavBar />
     </SafeAreaView>
   );
@@ -131,8 +145,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#00c999',
   },
-  container: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
     padding: 20,
   },
   header: {
@@ -201,22 +215,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  errorContainer: {
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 0, 0, 0.2)',
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
   userCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
@@ -274,18 +272,7 @@ const styles = StyleSheet.create({
   },
   sectionsContainer: {
     flex: 1,
-  },
-  noAddContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  noAddText: {
-    color: '#fff',
-    fontSize: 20,
-    marginTop: 15,
-    textAlign: 'center',
+    marginBottom: 40,
   },
 });
 
