@@ -10,6 +10,7 @@ import { MainNavigator } from './src/navigator/mainNavigator';
 import { AuthProvider, useAuth } from './src/contexts/authContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SocketProvider } from './src/contexts/socketContext';
+import Toast from 'react-native-toast-message';
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => {
           </SocketProvider>
         </SafeAreaProvider>
       </AuthProvider>
+      <Toast position="bottom" bottomOffset={60} />
     </QueryClientProvider>
   );
 };

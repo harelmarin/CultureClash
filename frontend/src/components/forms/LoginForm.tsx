@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import LottieView from 'lottie-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { login, checkSession } from '../../services/authService';
 import { useAuth } from '../../contexts/authContext';
 import { useFonts } from 'expo-font';
+import Toast from 'react-native-toast-message'; // Importation de Toast
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -24,14 +24,12 @@ const LoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useFonts({
     Modak: require('../../assets/font/Modak-Regular.ttf'),
   });
 
   const handleLogin = async () => {
-    setError('');
     setLoading(true);
     const loginData = { username, password };
     const success = await login(loginData);
@@ -42,10 +40,18 @@ const LoginForm = () => {
       if (sessionValid) {
         setIsAuthenticated(true);
       } else {
-        setError('Session invalide. Veuillez vous reconnecter.');
+        Toast.show({
+          type: 'error',
+          text1: 'Session invalide',
+          text2: 'Veuillez vous reconnecter.',
+        });
       }
     } else {
-      setError('Échec de la connexion. Vérifiez vos identifiants.');
+      Toast.show({
+        type: 'error',
+        text1: 'Échec de la connexion',
+        text2: 'Vérifiez vos identifiants.',
+      });
     }
   };
 
@@ -65,8 +71,6 @@ const LoginForm = () => {
       */}
       <Text style={styles.title}>CultureClash</Text>
       <Text style={styles.subtitle}>Connexion</Text>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <TextInput
         style={styles.input}
@@ -160,11 +164,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    marginVertical: 8,
     textAlign: 'center',
   },
   registerContainer: {

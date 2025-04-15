@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +15,7 @@ import { RoomScreenNavigationProp } from '../types/navigation';
 import { useAuth } from '../contexts/authContext';
 import { useSocket } from '../contexts/socketContext';
 import BottomNavBar from '../components/NavBar';
+import Toast from 'react-native-toast-message';
 
 const HomeScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
@@ -26,7 +28,7 @@ const HomeScreen = () => {
   const [isInQueue, setIsInQueue] = useState(false);
   const [hasAccepted, setHasAccepted] = useState(false);
   const [matchStarted, setMatchStarted] = useState(false);
-  const [queueTime, setQueueTime] = useState(0); // Timer pour la queue
+  const [queueTime, setQueueTime] = useState(0);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -65,11 +67,22 @@ const HomeScreen = () => {
       resetState();
     });
 
+    socket.on('matchRefused', ({ roomId }) => {
+      console.log('❌ L’autre joueur a refusé le match pour la room', roomId);
+      resetState();
+      Toast.show({
+        type: 'error',
+        text1: 'Match refusé',
+        text2: 'L’autre joueur a annulé le match.',
+      });
+    });
+
     return () => {
       socket.off('matchFound');
       socket.off('gameStart');
       socket.off('matchTimeout');
       socket.off('playerLeft');
+      socket.off('matchRefused');
     };
   }, [socket, navigation]);
 
@@ -94,7 +107,7 @@ const HomeScreen = () => {
     setTimer(null);
     setIsInQueue(false);
     setHasAccepted(false);
-    setQueueTime(0); // Reset du timer
+    setQueueTime(0);
     if (countdownRef.current) {
       clearInterval(countdownRef.current);
     }
@@ -131,6 +144,13 @@ const HomeScreen = () => {
     }
   };
 
+  const refuseMatch = () => {
+    if (roomId && socket) {
+      socket.emit('refuseMatch', { roomId });
+      resetState();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.userProfileBox}>
@@ -149,32 +169,6 @@ const HomeScreen = () => {
             </Text>
           </View>
         )}
-
-        {roomId && (
-          <View style={styles.matchContainer}>
-            <Text style={styles.roomText}>🎮 Match trouvé !</Text>
-            {timer !== null && timer > 0 ? (
-              <View style={styles.timerContainer}>
-                <Text style={styles.timerText}>⏳ {timer}</Text>
-                {!hasAccepted && (
-                  <Button
-                    title="Accepter le match"
-                    onPress={acceptMatch}
-                    color="#2ecc71"
-                  />
-                )}
-                {hasAccepted && (
-                  <Text style={styles.acceptedText}>✅ Match accepté</Text>
-                )}
-              </View>
-            ) : (
-              <View style={styles.startContainer}>
-                <Text style={styles.startText}>🚀 La partie commence !</Text>
-              </View>
-            )}
-          </View>
-        )}
-
         <TouchableOpacity
           style={styles.playButton}
           onPress={isInQueue ? leaveQueue : joinQueue}
@@ -185,6 +179,30 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
       <BottomNavBar />
+      {roomId && timer !== null && !hasAccepted && (
+        <Modal animationType="fade" transparent={true} visible={true}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>🎮 Match trouvé !</Text>
+              <Text style={styles.modalSubtitle}>Acceptez-vous le match ?</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  onPress={acceptMatch}
+                >
+                  <Text style={styles.btnText}>✅ Accepter</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.refuseBtn}
+                  onPress={refuseMatch}
+                >
+                  <Text style={styles.btnText}>❌ Refuser</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
@@ -222,12 +240,12 @@ const styles = StyleSheet.create({
   },
   matchContainer: {
     alignItems: 'center',
-    backgroundColor: '#2ecc71', // Vert vif pour attirer l'attention
+    backgroundColor: '#2ecc71',
     padding: 25,
     borderRadius: 15,
     elevation: 5,
     marginBottom: 20,
-    width: '90%', // Taille de la carte de match pour qu'elle soit plus large
+    width: '90%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
@@ -328,6 +346,63 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#2ecc71',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 18,
+    marginBottom: 25,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  acceptBtn: {
+    flex: 1,
+    backgroundColor: '#2ecc71',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  refuseBtn: {
+    flex: 1,
+    backgroundColor: '#e74c3c',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

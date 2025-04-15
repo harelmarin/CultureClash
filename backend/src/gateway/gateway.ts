@@ -346,4 +346,27 @@ export class MyGateway implements OnModuleInit {
       questionIndex: data.questionIndex,
     });
   }
+
+  @SubscribeMessage('refuseMatch')
+  handleRefuseMatch(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    const roomId = data.roomId;
+
+    const matchRequest = this.matchRequests.get(roomId);
+    if (!matchRequest) {
+      client.emit('error', { message: 'Match non trouvé' });
+      return;
+    }
+
+    matchRequest.players.forEach((player) => {
+      if (player.id !== client.id) {
+        player.emit('matchRefused', { roomId });
+      }
+    });
+
+    clearTimeout(matchRequest.timer);
+    this.matchRequests.delete(roomId);
+  }
 }

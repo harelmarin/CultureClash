@@ -8,12 +8,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LottieView from 'lottie-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { register } from '../../services/authService';
 import { useFonts } from 'expo-font';
+import Toast from 'react-native-toast-message'; // Importation de Toast
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -23,14 +23,12 @@ const RegisterForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useFonts({
     Modak: require('../../assets/font/Modak-Regular.ttf'),
   });
 
   const handleRegister = async () => {
-    setError('');
     setLoading(true);
 
     const registerData = { email, username, password };
@@ -39,14 +37,21 @@ const RegisterForm = () => {
     setLoading(false);
 
     if (success) {
+      Toast.show({
+        type: 'success',
+        text1: 'Inscription réussie',
+        text2: 'Votre compte a été créé avec succès !',
+      });
       setEmail('');
       setUsername('');
       setPassword('');
       navigation.navigate('Login');
     } else {
-      setError(
-        "Erreur lors de l'inscription. Veuillez vérifier vos informations.",
-      );
+      Toast.show({
+        type: 'error',
+        text1: "Erreur lors de l'inscription",
+        text2: 'Votre mail ou username est déjà utilisé',
+      });
     }
   };
 
@@ -63,8 +68,6 @@ const RegisterForm = () => {
         */}
         <Text style={styles.title}>CultureClash</Text>
         <Text style={styles.subtitle}>Créez votre compte</Text>
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TextInput
           style={styles.input}
@@ -122,11 +125,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  animation: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
-  },
   title: {
     fontSize: 42,
     fontFamily: 'Modak',
@@ -169,11 +167,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: Platform.select({ ios: '600', android: 'bold' }),
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    marginVertical: 8,
     textAlign: 'center',
   },
   loginContainer: {
