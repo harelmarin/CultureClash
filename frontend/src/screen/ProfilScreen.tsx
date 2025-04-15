@@ -25,25 +25,15 @@ const ProfilScreen = () => {
   const [profilPoint, setProfilPoint] = useState<number>(0);
   const [profilVictoire, setProfilVictoire] = useState<number>(0);
   const [profilDefaite, setProfilDefaite] = useState<number>(0);
+  const [profilEgalite, setProfilEgalite] = useState<number>(0);
 
   useFonts({
     Modak: require('../assets/font/Modak-Regular.ttf'),
   });
+
   useFocusEffect(
     React.useCallback(() => {
-      const getInfo = async () => {
-        if (!user?.id) return;
-
-        const profileUser = await getUserById(user.id);
-        if (profileUser) {
-          setProfilPoint(profileUser.points);
-          setProfilVictoire(profileUser.victories);
-          setProfilDefaite(profileUser.losses || 0);
-        }
-      };
-      getInfo();
-
-      const fetchMatchmakingHistory = async () => {
+      const fetchData = async () => {
         if (!user?.id) return;
 
         const matches = await getUserMatchmakingSessions(user.id);
@@ -51,6 +41,7 @@ const ProfilScreen = () => {
         if (Array.isArray(matches)) {
           let victoireCount = 0;
           let defaiteCount = 0;
+          let egaliteCount = 0;
 
           const MatchWithUsername = await Promise.all(
             matches.map(async (match) => {
@@ -59,25 +50,25 @@ const ProfilScreen = () => {
 
               if (match.playerOneId) {
                 const playerOne = await getUserById(match.playerOneId);
-                if (playerOne?.username) {
-                  playerOneUsername = playerOne.username;
-                }
+                if (playerOne?.username) playerOneUsername = playerOne.username;
               }
 
               if (match.playerTwoId) {
                 const playerTwo = await getUserById(match.playerTwoId);
-                if (playerTwo?.username) {
-                  playerTwoUsername = playerTwo.username;
-                }
+                if (playerTwo?.username) playerTwoUsername = playerTwo.username;
               }
 
-              if (match.winnerId === user.id) {
-                victoireCount += 1;
-              } else if (
+              if (
                 match.playerOneId === user.id ||
                 match.playerTwoId === user.id
               ) {
-                defaiteCount += 1;
+                if (match.playerOneScore === match.playerTwoScore) {
+                  egaliteCount++;
+                } else if (match.winnerId === user.id) {
+                  victoireCount++;
+                } else {
+                  defaiteCount++;
+                }
               }
 
               return {
@@ -88,16 +79,21 @@ const ProfilScreen = () => {
             }),
           );
 
-          setProfilVictoire((prev) => prev + victoireCount);
-          setProfilDefaite((prev) => prev + defaiteCount);
-
+          setProfilVictoire(victoireCount);
+          setProfilDefaite(defaiteCount);
+          setProfilEgalite(egaliteCount);
           setMatchmakingHistory(MatchWithUsername);
         } else {
           setMatchmakingHistory(null);
         }
+
+        const profileUser = await getUserById(user.id);
+        if (profileUser) {
+          setProfilPoint(profileUser.points);
+        }
       };
 
-      fetchMatchmakingHistory();
+      fetchData();
     }, [user?.id]),
   );
 
@@ -107,19 +103,25 @@ const ProfilScreen = () => {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View>
-          <View style={styles.header}>
-            <Text style={styles.title}>Profil de {user?.username}</Text>
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statText}>Victoires: {profilVictoire}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statText}>Défaites: {profilDefaite}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statText}>🌟{profilPoint}</Text>
-              </View>
+        <View style={styles.header}>
+          <Text style={styles.title}>Profil de {user?.username}</Text>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Victoires</Text>
+              <Text style={styles.statValue}>{profilVictoire}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Défaites</Text>
+              <Text style={styles.statValue}>{profilDefaite}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Égalités</Text>
+              <Text style={styles.statValue}>{profilEgalite}</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>🌟{profilPoint}</Text>
             </View>
           </View>
 
@@ -132,45 +134,63 @@ const ProfilScreen = () => {
           {matchmakingHistory && matchmakingHistory.length > 0 ? (
             <>
               <Text style={styles.subtitle}>Historique des matchs</Text>
-              {matchmakingHistory.map((match) => (
-                <View key={match.id} style={styles.matchItem}>
-                  <View style={styles.matchHeader}>
-                    <Text style={styles.matchDate}>
-                      {new Date(match.createdAt).toLocaleDateString()}
-                    </Text>
-                    <View style={styles.matchResult}>
-                      <Text style={styles.resultText}>
-                        {match.winnerId === user.id
-                          ? 'Victoire'
-                          : match.playerOneScore === match.playerTwoScore
-                          ? 'Égalité'
-                          : 'Défaite'}
+              {matchmakingHistory.map((match) => {
+                let resultColor = '#fff';
+                let backgroundColor = 'rgba(255, 255, 255, 0.1)';
+
+                if (match.winnerId === user.id) {
+                  resultColor = '#6C63FF';
+                } else if (match.playerOneScore === match.playerTwoScore) {
+                  resultColor = '#B0BEC5';
+                } else {
+                  resultColor = '#F44336';
+                }
+
+                return (
+                  <View
+                    key={match.id}
+                    style={[styles.matchItem, { backgroundColor }]}
+                  >
+                    <View style={styles.matchHeader}>
+                      <Text style={styles.matchDate}>
+                        {new Date(match.createdAt).toLocaleDateString()}
                       </Text>
+                      <View style={styles.matchResult}>
+                        <Text
+                          style={[styles.resultText, { color: resultColor }]}
+                        >
+                          {match.winnerId === user.id
+                            ? 'Victoire'
+                            : match.playerOneScore === match.playerTwoScore
+                            ? 'Égalité'
+                            : 'Défaite'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.playersContainer}>
+                      <View style={styles.playerContainer}>
+                        <Text style={styles.playerName}>
+                          {match.playerOneUsername}
+                        </Text>
+                        <Text style={styles.playerScore}>
+                          {match.playerOneScore} pts
+                        </Text>
+                      </View>
+                      <View style={styles.vsContainer}>
+                        <Text style={styles.vsText}>VS</Text>
+                      </View>
+                      <View style={styles.playerContainer}>
+                        <Text style={styles.playerName}>
+                          {match.playerTwoUsername}
+                        </Text>
+                        <Text style={styles.playerScore}>
+                          {match.playerTwoScore} pts
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                  <View style={styles.playersContainer}>
-                    <View style={styles.playerContainer}>
-                      <Text style={styles.playerName}>
-                        {match.playerOneUsername}
-                      </Text>
-                      <Text style={styles.playerScore}>
-                        {match.playerOneScore} pts
-                      </Text>
-                    </View>
-                    <View style={styles.vsContainer}>
-                      <Text style={styles.vsText}>VS</Text>
-                    </View>
-                    <View style={styles.playerContainer}>
-                      <Text style={styles.playerName}>
-                        {match.playerTwoUsername}
-                      </Text>
-                      <Text style={styles.playerScore}>
-                        {match.playerTwoScore} pts
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </>
           ) : (
             matchmakingHistory !== null && (
@@ -214,60 +234,71 @@ const styles = StyleSheet.create({
     }),
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: 'Modak',
     color: '#fff',
     textAlign: 'center',
     marginBottom: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  statsContainer: {
+  statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginTop: 10,
+    gap: 10,
   },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
+  statCard: {
+    flexBasis: '48%',
+    padding: 15,
     borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  statText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 8,
-    fontWeight: '600',
+  statLabel: {
+    color: '#6C63FF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 6,
   },
+  statValue: {
+    color: '#fefefe',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
   subtitle: {
-    fontSize: 30,
+    fontSize: 24,
     fontFamily: 'Modak',
     color: '#fff',
-    marginBottom: 20,
+    marginBottom: 18,
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   matchItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: 20,
     borderRadius: 20,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 5,
+        elevation: 8,
       },
     }),
   },
@@ -278,78 +309,65 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   matchDate: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 14,
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '400',
   },
   matchResult: {
-    backgroundColor: 'rgba(108, 99, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(108, 99, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
   },
   resultText: {
-    color: '#6C63FF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
   playersContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   playerContainer: {
-    flex: 1,
     alignItems: 'center',
+    width: '45%',
   },
   playerName: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
+    fontSize: 16,
     marginBottom: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   playerScore: {
-    color: '#6C63FF',
-    fontSize: 16,
-    fontWeight: '600',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   vsContainer: {
-    paddingHorizontal: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
   },
   vsText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginVertical: 20,
   },
   noMatchContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    marginTop: 30,
   },
   noMatchText: {
     color: '#fff',
     fontSize: 20,
-    marginTop: 15,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginVertical: 20,
+    fontWeight: '600',
+    marginTop: 10,
   },
 });
 
