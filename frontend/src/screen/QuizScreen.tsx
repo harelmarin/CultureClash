@@ -8,14 +8,15 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../types/navigation';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSocket } from '../contexts/socketContext';
 import { useAuth } from '../contexts/authContext';
 import GameOverModal from '../components/modals/GameOver';
 import { getUserById } from '../services/userService';
 import { updatePoints } from '../services/pointService';
+import Timer from '../components/Timer';
+import { RootStackParamList } from '../types/navigation';
 
 type Question = {
   id: string;
@@ -60,7 +61,6 @@ const QuizScreen = () => {
     const fetchPlayerNames = async () => {
       try {
         if (!matchmaking) return;
-
         const [playerOne, playerTwo] = await Promise.all([
           getUserById(matchmaking.playerOneId),
           getUserById(matchmaking.playerTwoId),
@@ -230,24 +230,32 @@ const QuizScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🏆 Scores</Text>
-        <View style={styles.scoreContainer}>
-          <Text style={styles.scoreText}>
-            {yourElo} pts {yourname}: {playerScore}
-          </Text>
-          <Text style={styles.scoreText}>
-            🆚 {opponentElo} pts {opponentname}: {opponentScore}
-          </Text>
+        <View style={styles.headerWrapper}>
+          <View style={styles.leftHeader}>
+            <Text style={styles.headerTitle}>{yourname}</Text>
+            <Text style={styles.scoreText}>{yourElo} ELO</Text>
+            <Text style={styles.scoreText}>{playerScore} pts</Text>
+          </View>
+          <View style={styles.rightHeader}>
+            <Text style={styles.headerTitle}>{opponentname}</Text>
+            <Text style={styles.scoreText}>{opponentElo} ELO</Text>
+            <Text style={styles.scoreText}>{opponentScore} pts</Text>
+          </View>
         </View>
       </View>
+
       <View style={styles.container2}>
-        <Text style={styles.timer}>⏳ Temps restant: {timeLeft}s</Text>
+        <View style={styles.modalTimerWrapper}>
+          <Timer duration={15} remaining={timeLeft ?? 0} />
+        </View>
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
+
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>{currentQuestion.text}</Text>
         </View>
+
         <View style={styles.choicesContainer}>
           {currentQuestion.choices.map((choice) => (
             <TouchableOpacity
@@ -266,6 +274,7 @@ const QuizScreen = () => {
           ))}
         </View>
       </View>
+
       <GameOverModal
         isOpen={isGameOver}
         winner={winner}
@@ -280,57 +289,43 @@ const QuizScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: '#00c999' },
   container: { flex: 1, padding: 20 },
-  timer: {
-    fontSize: 18,
-    color: '#ff5555',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
   header: {
-    backgroundColor: '#00c999',
-    paddingTop: 100,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
+    padding: 20,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    backgroundColor: ' #00c999',
+    elevation: 5,
+    marginBottom: 20,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fefefe',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
+  headerWrapper: { flexDirection: 'row', justifyContent: 'space-between' },
+  leftHeader: { alignItems: 'flex-start' },
+  rightHeader: { alignItems: 'flex-end' },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fefefe' },
+  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#fefefe' },
   progress: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
-  container2: {
-    paddingTop: 160,
-    flex: 1,
-    paddingHorizontal: 20,
-    backgroundColor: 'fefefe',
-  },
+  container2: { paddingHorizontal: 20, flex: 1 },
   questionContainer: {
     padding: 20,
     borderRadius: 10,
+    backgroundColor: '#ffffff',
     marginBottom: 20,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: '#ddd',
   },
   questionText: {
-    fontSize: 20,
+    fontSize: 22,
+    fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
+    lineHeight: 30,
   },
   choicesContainer: { gap: 10 },
   choiceButton: {
@@ -348,18 +343,12 @@ const styles = StyleSheet.create({
       android: { elevation: 3 },
     }),
   },
-  choiceText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: Platform.select({ ios: '600', android: 'bold' }),
+  choiceText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  modalTimerWrapper: {
+    marginVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  scoreContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
 });
 
 export default QuizScreen;

@@ -152,11 +152,8 @@ const ProfilScreen = () => {
               }
 
               return (
-                <View>
-                  <View
-                    key={match.id}
-                    style={[styles.matchItem, { backgroundColor }]}
-                  >
+                <View key={match.id}>
+                  <View style={[styles.matchItem, { backgroundColor }]}>
                     <View style={styles.matchHeader}>
                       <Text style={styles.matchDate}>
                         {new Date(match.createdAt).toLocaleDateString()}
