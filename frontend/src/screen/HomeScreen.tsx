@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/authContext';
 import { useSocket } from '../contexts/socketContext';
 import BottomNavBar from '../components/NavBar';
 import Toast from 'react-native-toast-message';
+import Timer from '../components/Timer';
 
 const HomeScreen = () => {
   const navigation = useNavigation<RoomScreenNavigationProp>();
@@ -143,7 +144,7 @@ const HomeScreen = () => {
     if (roomId && socket) {
       socket.emit('acceptMatch', { roomId });
       setHasAccepted(true);
-      setShowModal(false); // Cache la modale une fois que le match est accepté
+      setShowModal(false);
       console.log('✅ Match accepté');
     }
   };
@@ -155,6 +156,29 @@ const HomeScreen = () => {
       setShowModal(false);
     }
   };
+
+  useEffect(() => {
+    if (timer === null || hasAccepted || !showModal) return;
+
+    const interval = setInterval(() => {
+      setTimer((prevTimer) => {
+        if (prevTimer !== null && prevTimer > 0) {
+          return prevTimer - 1;
+        } else {
+          clearInterval(interval);
+          return 0;
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer, hasAccepted, showModal]);
+
+  useEffect(() => {
+    if (timer === 0 && !hasAccepted && roomId && socket) {
+      refuseMatch();
+    }
+  }, [timer]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -168,10 +192,19 @@ const HomeScreen = () => {
 
         {isInQueue && !roomId && (
           <View style={styles.queueContainer}>
-            <ActivityIndicator size="large" color="#3498db" />
-            <Text style={styles.queueText}>
-              Temps dans la file : {queueTime}s
-            </Text>
+            <ActivityIndicator
+              size="large"
+              color="#6C63FF"
+              style={styles.rouetimer}
+            />
+            <View style={styles.queueContainer}>
+              <Text style={styles.queueText}>
+                🔍 En attente d’un adversaire...
+              </Text>
+              <View>
+                <Text style={styles.queueTimeText}>{queueTime}s</Text>
+              </View>
+            </View>
           </View>
         )}
         <TouchableOpacity
@@ -187,9 +220,16 @@ const HomeScreen = () => {
       {roomId && timer !== null && !hasAccepted && showModal && (
         <Modal animationType="fade" transparent={true} visible={true}>
           <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
+            <View style={styles.customModal}>
               <Text style={styles.modalTitle}>🎮 Match trouvé !</Text>
-              <Text style={styles.modalSubtitle}>Acceptez-vous le match ?</Text>
+              <Text style={styles.modalSubtitle}>
+                Prêt à affronter ton adversaire ?
+              </Text>
+
+              <View style={styles.modalTimerWrapper}>
+                <Timer duration={15} remaining={timer ?? 0} />
+              </View>
+
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={styles.acceptBtn}
@@ -235,14 +275,20 @@ const styles = StyleSheet.create({
   },
   queueContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 16,
   },
   queueText: {
     fontSize: 20,
-    color: '#3498db',
+    color: '#fff',
     fontWeight: 'bold',
-    marginTop: 15,
   },
+  queueTimeText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#6C63FF',
+    marginTop: 24,
+  },
+
   matchContainer: {
     alignItems: 'center',
     backgroundColor: '#2ecc71',
@@ -262,6 +308,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  rouetimer: {
+    marginBottom: 15,
   },
   roomIdText: {
     fontSize: 18,
@@ -362,52 +411,81 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#fff',
     borderRadius: 20,
+  },
+  customModal: {
+    width: '85%',
+    backgroundColor: '#00c999',
+    borderRadius: 25,
     padding: 25,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 10,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 10,
-    color: '#2ecc71',
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 18,
-    marginBottom: 25,
+    color: '#f9f9f9',
     textAlign: 'center',
-    color: '#333',
+    marginBottom: 20,
+  },
+  modalTimerWrapper: {
+    marginVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     width: '100%',
+    justifyContent: 'space-between',
   },
   acceptBtn: {
     flex: 1,
     backgroundColor: '#2ecc71',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginRight: 10,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginRight: 8,
     alignItems: 'center',
   },
   refuseBtn: {
     flex: 1,
     backgroundColor: '#e74c3c',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginLeft: 10,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginLeft: 8,
     alignItems: 'center',
   },
   btnText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+
+  timerBox: {
+    marginTop: 10,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  timerNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#6C63FF',
+    letterSpacing: 1,
   },
 });
 

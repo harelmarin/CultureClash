@@ -1,11 +1,15 @@
-import { View, Text, StyleSheet, Platform } from "react-native";
-import { useAuth } from "../contexts/authContext";
-import { useFriendsList } from "../hooks/useFriends";
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useAuth } from '../contexts/authContext';
+import { useFriendsList } from '../hooks/useFriends';
 import { useFonts } from 'expo-font';
 
 const FriendListe = () => {
   const { user } = useAuth();
-  const { data: friendsList = [], isLoading, error } = useFriendsList(user?.id || '');
+  const {
+    data: friendsList = [],
+    isLoading,
+    error,
+  } = useFriendsList(user?.id || '');
 
   useFonts({
     Modak: require('../assets/font/Modak-Regular.ttf'),
@@ -31,7 +35,9 @@ const FriendListe = () => {
     <View key={follow.id} style={styles.friendCard}>
       <View style={styles.friendInfo}>
         <Text style={styles.username}>{follow.followedUser.username}</Text>
-        <Text style={styles.points}>{follow.followedUser.points || 0} points</Text>
+        <Text style={styles.points}>
+          {follow.followedUser.points || 0} points
+        </Text>
       </View>
     </View>
   ));
@@ -41,7 +47,9 @@ const FriendListe = () => {
       <Text style={styles.title}>Mes amis ({friendsList.length})</Text>
       {friendsList.length === 0 ? (
         <Text style={styles.noFriends}>Aucun ami pour le moment</Text>
-      ) : renderedList}
+      ) : (
+        renderedList
+      )}
     </View>
   );
 };

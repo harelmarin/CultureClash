@@ -96,7 +96,7 @@ const FriendScreen = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
-        style={{ flex: 1 }} // Assurer que le ScrollView prend toute la place
+        style={{ flex: 1 }}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Rechercher un joueur</Text>
