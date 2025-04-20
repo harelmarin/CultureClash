@@ -119,7 +119,7 @@ const QuizScreen = () => {
   useEffect(() => {
     const onNext = (data: { questionIndex: number }) => {
       setCurrentQuestionIndex(data.questionIndex);
-      setTimeLeft(15);
+      setTimeLeft(10);
       setSelectedAnswer(null);
     };
     socket.on('updateQuestion', onNext);
@@ -129,10 +129,7 @@ const QuizScreen = () => {
   }, [socket]);
 
   const handleTimeout = () => {
-    if (isGameOver || gameOverSent) {
-      console.log('Game over already sent or game already finished.');
-      return;
-    }
+    if (isGameOver || gameOverSent) return;
     setGameOverSent(true);
     setIsGameOver(true);
 
@@ -154,7 +151,6 @@ const QuizScreen = () => {
     const winnerId =
       p1 === p2 ? 'égalité' : p1 > p2 ? playerOneId : playerTwoId;
 
-    console.log('Emitting quizFinished', winnerId);
     socket.off('quizFinished');
     socket.emit('quizFinished', {
       roomId,
@@ -193,7 +189,6 @@ const QuizScreen = () => {
     };
 
     socket.once('gameOver', onGameOver);
-    console.log('GameOver Emis');
     return () => {
       socket.off('gameOver', onGameOver);
     };
@@ -222,22 +217,29 @@ const QuizScreen = () => {
         <View style={styles.headerWrapper}>
           <View style={styles.leftHeader}>
             <Text style={styles.headerTitle}>{yourname}</Text>
-            <Text style={styles.scoreText}>{yourElo} ELO</Text>
-            <Text style={styles.scoreText}>{playerScore} pts</Text>
+            <Text style={styles.eloText}>{`🌟 ${yourElo}`}</Text>
           </View>
           <View style={styles.rightHeader}>
             <Text style={styles.headerTitle}>{opponentname}</Text>
-            <Text style={styles.scoreText}>{opponentElo} ELO</Text>
-            <Text style={styles.scoreText}>{opponentScore} pts</Text>
+            <Text style={styles.eloText}>{`🌟 ${opponentElo}`}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.container2}>
-        <Timer duration={15} remaining={timeLeft} />
+        <View style={styles.timerRow}>
+          <View style={styles.timerScore}>
+            <Text style={styles.pointsText}>{playerScore}</Text>
+          </View>
+          <Timer duration={10} remaining={timeLeft} />
+          <View style={styles.timerScore}>
+            <Text style={styles.pointsText}>{opponentScore}</Text>
+          </View>
+        </View>
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
+
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>{current.text}</Text>
         </View>
@@ -282,7 +284,13 @@ const styles = StyleSheet.create({
   headerWrapper: { flexDirection: 'row', justifyContent: 'space-between' },
   leftHeader: { alignItems: 'flex-start' },
   rightHeader: { alignItems: 'flex-end' },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'Modak',
+  },
+  eloText: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
   scoreText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
   container2: { flex: 1, paddingHorizontal: 20 },
   progress: {
@@ -320,6 +328,26 @@ const styles = StyleSheet.create({
     }),
   },
   choiceText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  timerScore: {
+    alignItems: 'center',
+  },
+  nameText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  pointsText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#6C63FF',
+    marginHorizontal: 50,
+  },
 });
 
 export default QuizScreen;

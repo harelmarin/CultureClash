@@ -36,7 +36,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={isOpen}
       onRequestClose={onClose}
@@ -45,7 +45,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         <View style={styles.modalContent}>
           <Text style={styles.title}>🎉 Fin du match !</Text>
           <Text style={styles.message}>
-            🏆 {winner ? `Le gagnant est ${winner}` : 'Match nul !'}
+            🏆 {winner ? `${winner}` : 'Match nul !'}
           </Text>
           <Text style={styles.scores}>
             {yourName} : {playerOneScore} pts
@@ -70,37 +70,51 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
-    width: 300,
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    width: '80%',
+    backgroundColor: '#00c999',
+    borderRadius: 25,
+    padding: 25,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 10,
+    textAlign: 'center',
   },
   message: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 24,
+    color: '#f9f9f9',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: 'bold',
   },
   scores: {
-    fontSize: 14,
-    marginBottom: 5,
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   button: {
     marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#4CAF50',
-    borderRadius: 5,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    backgroundColor: '#6C63FF',
+    borderRadius: 14,
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
   },
 });

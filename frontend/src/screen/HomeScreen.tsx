@@ -185,7 +185,7 @@ const HomeScreen = () => {
       <View style={styles.container}>
         <View style={styles.profileContainer}>
           <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
-          <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
+          <Text style={styles.userPoints}>🌟 {user?.points ?? 0}</Text>
         </View>
         <Text style={styles.title}>CultureClash</Text>
 
