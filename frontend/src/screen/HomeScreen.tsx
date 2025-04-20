@@ -234,13 +234,13 @@ const HomeScreen = () => {
                   style={styles.acceptBtn}
                   onPress={acceptMatch}
                 >
-                  <Text style={styles.btnText}>✅ Accepter</Text>
+                  <Text style={styles.btnText}>Accepter</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.refuseBtn}
                   onPress={refuseMatch}
                 >
-                  <Text style={styles.btnText}>❌ Refuser</Text>
+                  <Text style={styles.btnText}>Refuser</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   },
   acceptBtn: {
     flex: 1,
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#6C63FF',
     paddingVertical: 14,
     borderRadius: 14,
     marginRight: 8,

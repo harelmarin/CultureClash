@@ -120,42 +120,73 @@ export class UserService {
       throw new InternalServerErrorException(error);
     }
   }
-
   async updatePoint(
-    winner: string,
-    loser: string,
+    winnerId: string,
+    playerOneId: string,
+    playerTwoId: string,
   ): Promise<{ winner: User; loser: User }> {
     try {
-      const checkScoreLoser = await this.prisma.user.findUnique({
-        where: { id: loser },
-        select: { points: true },
-      });
+      let winner: string;
+      let loser: string;
 
-      if (!checkScoreLoser) {
-        throw new NotFoundException(`User ${loser} not found`);
+      if (winnerId === playerOneId) {
+        winner = playerOneId;
+        loser = playerTwoId;
+      } else if (winnerId === playerTwoId) {
+        winner = playerTwoId;
+        loser = playerOneId;
+      } else {
+        throw new NotFoundException('ID du gagnant invalide');
       }
 
-      const newLoserPoints =
-        checkScoreLoser.points < 8 ? 0 : checkScoreLoser.points - 8;
+      const winnerUser = await this.prisma.user.findUnique({
+        where: { id: winner },
+        select: { id: true, points: true },
+      });
 
-      const [winnerUser, loserUser] = await this.prisma.$transaction([
-        this.prisma.user.update({
-          where: { id: winner },
-          data: {
-            points: { increment: 8 },
-            victories: { increment: 1 },
-          },
-        }),
-        this.prisma.user.update({
-          where: { id: loser },
-          data: {
-            points: newLoserPoints,
-            defeats: { increment: 1 },
-          },
-        }),
-      ]);
+      const loserUser = await this.prisma.user.findUnique({
+        where: { id: loser },
+        select: { id: true, points: true },
+      });
 
-      return { winner: winnerUser, loser: loserUser };
+      if (!winnerUser || !loserUser) {
+        throw new NotFoundException(
+          "Un ou les deux utilisateurs n'ont pas été trouvés",
+        );
+      }
+
+      const K = 4;
+
+      const expectedWinner =
+        1 / (1 + Math.pow(10, (loserUser.points - winnerUser.points) / 400));
+      const expectedLoser =
+        1 / (1 + Math.pow(10, (winnerUser.points - loserUser.points) / 400));
+
+      const newWinnerPoints = winnerUser.points + K * (1 - expectedWinner);
+      const newLoserPoints = loserUser.points + K * (0 - expectedLoser);
+
+      const updatedWinner = await this.prisma.user.update({
+        where: { id: winner },
+        data: {
+          points: {
+            increment: Math.round(newWinnerPoints - winnerUser.points),
+          },
+          victories: { increment: 1 },
+        },
+      });
+
+      const updatedLoser = await this.prisma.user.update({
+        where: { id: loser },
+        data: {
+          points: { increment: Math.round(newLoserPoints - loserUser.points) },
+          defeats: { increment: 1 },
+        },
+      });
+
+      return {
+        winner: updatedWinner,
+        loser: updatedLoser,
+      };
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

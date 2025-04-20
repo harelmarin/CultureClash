@@ -56,177 +56,166 @@ const QuizScreen = () => {
   const [opponentname, setOpponentName] = useState('Adversaire');
   const [yourElo, setYourElo] = useState(0);
   const [opponentElo, setOpponentElo] = useState(0);
+  const [eloUpdated, setEloUpdated] = useState(false);
+  const [gameOverSent, setGameOverSent] = useState(false);
 
   useEffect(() => {
     const fetchPlayerNames = async () => {
+      if (!matchmaking) return;
       try {
-        if (!matchmaking) return;
         const [playerOne, playerTwo] = await Promise.all([
           getUserById(matchmaking.playerOneId),
           getUserById(matchmaking.playerTwoId),
         ]);
-
-        if (playerOne) setYourElo(playerOne.points);
-        if (playerTwo) setOpponentElo(playerTwo.points);
-
         if (!playerOne || !playerTwo) return;
-
-        setYourName(
-          user.id === playerOne.id ? playerOne.username : playerTwo.username,
-        );
-        setOpponentName(
-          user.id === playerOne.id ? playerTwo.username : playerOne.username,
-        );
-      } catch (error) {
-        console.error('Erreur lors de la récupération des noms:', error);
+        if (user.id === playerOne.id) {
+          setYourElo(playerOne.points);
+          setOpponentElo(playerTwo.points);
+          setYourName(playerOne.username);
+          setOpponentName(playerTwo.username);
+        } else {
+          setYourElo(playerTwo.points);
+          setOpponentElo(playerOne.points);
+          setYourName(playerTwo.username);
+          setOpponentName(playerOne.username);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération des noms:', err);
       }
     };
-
     fetchPlayerNames();
   }, [matchmaking, user.id]);
 
   useEffect(() => {
     if (timeLeft > 0) {
-      timerRef.current = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      if (!timerRef.current) {
+        timerRef.current = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      }
     } else {
       handleTimeout();
     }
-    return () => clearTimeout(timerRef.current as NodeJS.Timeout);
+
+    return () => {
+      clearTimeout(timerRef.current as NodeJS.Timeout);
+      timerRef.current = null;
+    };
   }, [timeLeft]);
 
   useEffect(() => {
     socket.emit('joinRoom', { roomId, playerId: user.id });
-    return () => {
-      socket.off('scoreUpdated');
-    };
   }, [socket, roomId, user.id]);
 
   useEffect(() => {
-    socket.on('scoreUpdated', (data) => {
-      if (data.userId === user.id) {
-        setPlayerScore(data.score);
-      } else {
-        setOpponentScore(data.score);
-      }
-    });
-
-    return () => {
-      socket.off('scoreUpdated');
+    const onScore = (data: { userId: string; score: number }) => {
+      if (data.userId === user.id) setPlayerScore(data.score);
+      else setOpponentScore(data.score);
     };
-  }, [socket, user.id, matchmaking]);
+    socket.on('scoreUpdated', onScore);
+    return () => {
+      socket.off('scoreUpdated', onScore);
+    };
+  }, [socket, user.id]);
 
   useEffect(() => {
-    socket.on('updateQuestion', (data) => {
+    const onNext = (data: { questionIndex: number }) => {
       setCurrentQuestionIndex(data.questionIndex);
-      setTimeLeft(10);
+      setTimeLeft(15);
       setSelectedAnswer(null);
-    });
+    };
+    socket.on('updateQuestion', onNext);
     return () => {
-      socket.off('updateQuestion');
+      socket.off('updateQuestion', onNext);
     };
   }, [socket]);
 
   const handleTimeout = () => {
-    setTimeout(() => {
-      if (isGameOver) return;
+    if (isGameOver || gameOverSent) {
+      console.log('Game over already sent or game already finished.');
+      return;
+    }
+    setGameOverSent(true);
+    setIsGameOver(true);
 
-      const playerOneId = matchmaking?.playerOneId;
-      const playerTwoId = matchmaking?.playerTwoId;
+    const playerOneId = matchmaking!.playerOneId;
+    const playerTwoId = matchmaking!.playerTwoId;
+    let p1 = null,
+      p2 = null;
 
-      let playerOneScore = null;
-      let playerTwoScore = null;
+    if (playerOneId === user.id) {
+      p1 = playerScore;
+      p2 = opponentScore;
+    } else {
+      p1 = opponentScore;
+      p2 = playerScore;
+    }
 
-      if (playerOneId === user.id) {
-        playerOneScore = playerScore;
-        playerTwoScore = opponentScore;
-      } else if (playerTwoId === user.id) {
-        playerOneScore = opponentScore;
-        playerTwoScore = playerScore;
-      }
+    if (p1 == null || p2 == null) return;
 
-      if (playerOneScore === null || playerTwoScore === null) return;
+    const winnerId =
+      p1 === p2 ? 'égalité' : p1 > p2 ? playerOneId : playerTwoId;
 
-      if (playerOneScore > playerTwoScore) {
-        updatePoints(playerOneId, playerTwoId);
-      } else if (playerTwoScore > playerOneScore) {
-        updatePoints(playerTwoId, playerOneId);
-      }
-
-      socket.emit('quizFinished', {
-        roomId,
-        playerOneScore,
-        playerTwoScore,
-        winnerId:
-          playerOneScore === playerTwoScore
-            ? 'égalité'
-            : playerOneScore > playerTwoScore
-            ? playerOneId
-            : playerTwoId,
-      });
-    }, 100);
+    console.log('Emitting quizFinished', winnerId);
+    socket.off('quizFinished');
+    socket.emit('quizFinished', {
+      roomId,
+      playerOneScore: p1,
+      playerTwoScore: p2,
+      winnerId,
+    });
+    socket.off('quizFinished');
   };
 
   useEffect(() => {
-    const handleGameOver = (data: { winnerId: string | null }) => {
-      const winnerId = data.winnerId;
+    const onGameOver = async (data: { winnerId: string | null }) => {
+      const win = data.winnerId;
+      if (!win || eloUpdated) return;
 
-      if (winnerId && winnerId !== 'égalité') {
-        getUserById(winnerId).then((winnerUser) => {
-          if (winnerUser) {
-            setWinner(winnerUser.username);
-          }
-        });
+      try {
+        await updatePoints(
+          win,
+          matchmaking!.playerOneId,
+          matchmaking!.playerTwoId,
+        );
+      } catch (err) {
+        console.error('Erreur updatePoints:', err);
+      }
+
+      setEloUpdated(true);
+
+      if (win !== 'égalité') {
+        const u = await getUserById(win);
+        if (u) setWinner(u.username);
       } else {
         setWinner('égalité');
       }
 
-      setIsGameOver(true);
+      setGameOverSent(false);
     };
 
-    socket.off('gameOver', handleGameOver);
-    socket.on('gameOver', handleGameOver);
-
+    socket.once('gameOver', onGameOver);
+    console.log('GameOver Emis');
     return () => {
-      socket.off('gameOver', handleGameOver);
+      socket.off('gameOver', onGameOver);
     };
-  }, [socket]);
-
-  useEffect(() => {
-    if (!isGameOver) {
-      setWinner(null);
-    }
-  }, [isGameOver]);
+  }, [socket, matchmaking]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (selectedAnswer !== null) return;
-
     setSelectedAnswer(isCorrect);
-    let newScore = playerScore;
-
-    if (isCorrect) {
-      newScore += timeLeft;
-    }
-
+    const newScore = playerScore + (isCorrect ? timeLeft : 0);
     setPlayerScore(newScore);
-    socket.emit('updateScore', {
-      roomId,
-      userId: user.id,
-      score: newScore,
-    });
+    socket.emit('updateScore', { roomId, userId: user.id, score: newScore });
   };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <ActivityIndicator size="large" color="#6C63FF" />
-        </View>
+        <ActivityIndicator style={{ flex: 1 }} size="large" color="#6C63FF" />
       </SafeAreaView>
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
-
+  const current = questions[currentQuestionIndex];
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -245,34 +234,28 @@ const QuizScreen = () => {
       </View>
 
       <View style={styles.container2}>
-        <View style={styles.modalTimerWrapper}>
-          <Timer duration={15} remaining={timeLeft ?? 0} />
-        </View>
+        <Timer duration={15} remaining={timeLeft} />
         <Text style={styles.progress}>
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
-
         <View style={styles.questionContainer}>
-          <Text style={styles.questionText}>{currentQuestion.text}</Text>
+          <Text style={styles.questionText}>{current.text}</Text>
         </View>
-
-        <View style={styles.choicesContainer}>
-          {currentQuestion.choices.map((choice) => (
-            <TouchableOpacity
-              key={choice.id}
-              style={[
-                styles.choiceButton,
-                selectedAnswer !== null && {
-                  backgroundColor: choice.isCorrect ? 'green' : 'red',
-                },
-              ]}
-              onPress={() => handleAnswer(choice.isCorrect)}
-              disabled={selectedAnswer !== null}
-            >
-              <Text style={styles.choiceText}>{choice.text}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {current.choices.map((c) => (
+          <TouchableOpacity
+            key={c.id}
+            style={[
+              styles.choiceButton,
+              selectedAnswer !== null && {
+                backgroundColor: c.isCorrect ? 'green' : 'red',
+              },
+            ]}
+            onPress={() => handleAnswer(c.isCorrect)}
+            disabled={selectedAnswer !== null}
+          >
+            <Text style={styles.choiceText}>{c.text}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <GameOverModal
@@ -290,44 +273,37 @@ const QuizScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#00c999' },
-  container: { flex: 1, padding: 20 },
   header: {
     padding: 20,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    backgroundColor: ' #00c999',
-    elevation: 5,
+    backgroundColor: '#00c999',
     marginBottom: 20,
+    elevation: 5,
   },
   headerWrapper: { flexDirection: 'row', justifyContent: 'space-between' },
   leftHeader: { alignItems: 'flex-start' },
   rightHeader: { alignItems: 'flex-end' },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fefefe' },
-  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#fefefe' },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  container2: { flex: 1, paddingHorizontal: 20 },
   progress: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginVertical: 10,
   },
-  container2: { paddingHorizontal: 20, flex: 1 },
   questionContainer: {
+    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
     marginBottom: 20,
     elevation: 3,
-    borderWidth: 2,
-    borderColor: '#ddd',
   },
   questionText: {
     fontSize: 22,
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    lineHeight: 30,
   },
-  choicesContainer: { gap: 10 },
   choiceButton: {
     backgroundColor: '#6C63FF',
     padding: 15,
@@ -344,11 +320,6 @@ const styles = StyleSheet.create({
     }),
   },
   choiceText: { color: '#fff', fontSize: 16, textAlign: 'center' },
-  modalTimerWrapper: {
-    marginVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
 
 export default QuizScreen;

@@ -1,14 +1,18 @@
 import { IP_PC } from '../../config';
 
-interface PlayerId {
-  winnerId: string;
-  loserId: string;
-}
+let updateInProgress = false;
 
 export const updatePoints = async (
-  winnerId: PlayerId,
-  loserId: PlayerId,
+  winnerId: string,
+  playerOneId: string,
+  playerTwoId: string,
 ): Promise<void> => {
+  if (updateInProgress) {
+    return;
+  }
+
+  updateInProgress = true;
+
   try {
     const response = await fetch(`${IP_PC}/user/points`, {
       method: 'PATCH',
@@ -17,7 +21,8 @@ export const updatePoints = async (
       },
       body: JSON.stringify({
         winnerId,
-        loserId,
+        playerOneId,
+        playerTwoId,
       }),
     });
 
@@ -26,5 +31,7 @@ export const updatePoints = async (
     }
   } catch (error) {
     console.error('Erreur lors de la mise à jour des points:', error);
+  } finally {
+    updateInProgress = false;
   }
 };

@@ -102,8 +102,9 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Utilisateur Update' })
   async update(
     @Body('winnerId') winnerId: string,
-    @Body('loserId') loserId: string,
+    @Body('playerOneId') playerOneId: string,
+    @Body('playerTwoId') playerTwoId: string,
   ) {
-    return this.userService.updatePoint(winnerId, loserId);
+    return this.userService.updatePoint(winnerId, playerOneId, playerTwoId);
   }
 }
