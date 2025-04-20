@@ -13,68 +13,52 @@ const BottomNavBar = () => {
 
   return (
     <View style={styles.navBar}>
-      <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
-        <View
-          style={[
-            styles.iconWrapper,
-            isActive('Leaderboard') && styles.iconWrapperActive,
-          ]}
-        >
-          <Ionicons
-            name="trophy-outline"
-            size={26}
-            color={isActive('Leaderboard') ? '#fff' : '#fff'}
-          />
-        </View>
+      <TouchableOpacity
+        style={[styles.navItem, isActive('Leaderboard') && styles.activeItem]}
+        onPress={() => navigation.navigate('Leaderboard')}
+      >
+        <Ionicons
+          name="trophy-outline"
+          size={26}
+          color={isActive('Leaderboard') ? '#fff' : '#eee'}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Friend')}>
-        <View
-          style={[
-            styles.iconWrapper,
-            isActive('Friend') && styles.iconWrapperActive,
-          ]}
-        >
-          <Ionicons
-            name="people-outline"
-            size={26}
-            color={isActive('Friend') ? '#fff' : '#fff'}
-          />
-        </View>
+      <TouchableOpacity
+        style={[styles.navItem, isActive('Friend') && styles.activeItem]}
+        onPress={() => navigation.navigate('Friend')}
+      >
+        <Ionicons
+          name="people-outline"
+          size={26}
+          color={isActive('Friend') ? '#fff' : '#eee'}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <View
-          style={[
-            styles.iconWrapper,
-            isActive('Home') && styles.iconWrapperActive,
-          ]}
-        >
-          <Ionicons
-            name="home-outline"
-            size={28}
-            color={isActive('Home') ? '#fff' : '#fff'}
-          />
-        </View>
+      <TouchableOpacity
+        style={[styles.navItem, isActive('Home') && styles.activeItem]}
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Ionicons
+          name="home-outline"
+          size={28}
+          color={isActive('Home') ? '#fff' : '#eee'}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Profil')}>
-        <View
-          style={[
-            styles.iconWrapper,
-            isActive('Profil') && styles.iconWrapperActive,
-          ]}
-        >
-          <Ionicons
-            name="person-outline"
-            size={26}
-            color={isActive('Profil') ? '#fff' : '#fff'}
-          />
-        </View>
+      <TouchableOpacity
+        style={[styles.navItem, isActive('Profil') && styles.activeItem]}
+        onPress={() => navigation.navigate('Profil')}
+      >
+        <Ionicons
+          name="person-outline"
+          size={26}
+          color={isActive('Profil') ? '#fff' : '#eee'}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={logout}>
-        <Ionicons name="log-out-outline" size={26} color="#fff" />
+      <TouchableOpacity style={styles.navItem} onPress={logout}>
+        <Ionicons name="log-out-outline" size={26} color="#eee" />
       </TouchableOpacity>
     </View>
   );
@@ -89,10 +73,9 @@ const styles = StyleSheet.create({
     height: 90,
     backgroundColor: 'rgba(0, 163, 135, 0.95)',
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
+    overflow: 'hidden',
     paddingBottom: Platform.OS === 'ios' ? 20 : 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -100,11 +83,14 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 10,
   },
-  iconWrapper: {
-    padding: 10,
-    borderRadius: 50,
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRightWidth: 0.5,
+    borderRightColor: '#ddd',
   },
-  iconWrapperActive: {
+  activeItem: {
     backgroundColor: '#6C63FF',
   },
 });

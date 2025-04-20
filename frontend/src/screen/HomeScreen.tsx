@@ -182,12 +182,11 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.userProfileBox}>
-        <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
-        <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
-      </View>
-
       <View style={styles.container}>
+        <View style={styles.profileContainer}>
+          <Text style={styles.userName}>{user?.username ?? 'Invité'}</Text>
+          <Text style={styles.userPoints}>🌟 {user?.points ?? 0} pts</Text>
+        </View>
         <Text style={styles.title}>CultureClash</Text>
 
         {isInQueue && !roomId && (
@@ -359,31 +358,39 @@ const styles = StyleSheet.create({
     marginTop: 20,
     gap: 10,
   },
-  userProfileBox: {
-    position: 'absolute',
-    top: 100,
-    left: 50,
-    flexDirection: 'row',
+  profileContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 100,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 25,
+    width: 160,
+    height: 160,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+    marginTop: -140,
+    marginBottom: 40,
+    display: 'flex',
+    justifyContent: 'center',
   },
+
   userName: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 4,
+    fontFamily: 'Modak',
   },
+
   userPoints: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#6C63FF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
+
   playButton: {
     backgroundColor: '#6C63FF',
     paddingVertical: 22,

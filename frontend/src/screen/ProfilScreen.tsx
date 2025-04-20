@@ -16,7 +16,6 @@ import { getUserById } from '../services/userService';
 import { useFonts } from 'expo-font';
 import BottomNavBar from '../components/NavBar';
 import { useFocusEffect } from '@react-navigation/native';
-
 const ProfilScreen = () => {
   const [matchmakingHistory, setMatchmakingHistory] = useState<
     Matchmaking[] | null
@@ -140,15 +139,18 @@ const ProfilScreen = () => {
           <>
             <Text style={styles.subtitle}>Historique des matchs</Text>
             {matchmakingHistory.map((match) => {
-              let resultColor = '#fff';
               let backgroundColor = 'rgba(255, 255, 255, 0.1)';
+              let resultLabel = '';
 
-              if (match.winnerId === user.id) {
-                resultColor = '#6C63FF';
-              } else if (match.playerOneScore === match.playerTwoScore) {
-                resultColor = '#B0BEC5';
+              if (match.playerOneScore === match.playerTwoScore) {
+                backgroundColor = 'rgba(176, 190, 197, 0.2)';
+                resultLabel = 'Égalité';
+              } else if (match.winnerId === user.id) {
+                backgroundColor = '#6C63FF';
+                resultLabel = 'Victoire';
               } else {
-                resultColor = '#F44336';
+                backgroundColor = '#F44336';
+                resultLabel = 'Défaite';
               }
 
               return (
@@ -159,15 +161,7 @@ const ProfilScreen = () => {
                         {new Date(match.createdAt).toLocaleDateString()}
                       </Text>
                       <View style={styles.matchResult}>
-                        <Text
-                          style={[styles.resultText, { color: resultColor }]}
-                        >
-                          {match.winnerId === user.id
-                            ? 'Victoire'
-                            : match.playerOneScore === match.playerTwoScore
-                            ? 'Égalité'
-                            : 'Défaite'}
-                        </Text>
+                        <Text style={[styles.resultText]}>{resultLabel}</Text>
                       </View>
                     </View>
                     <View style={styles.playersContainer}>
