@@ -10,7 +10,7 @@ import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(): Promise<User[]> {
     try {
@@ -165,12 +165,14 @@ export class UserService {
       const newWinnerPoints = winnerUser.points + K * (1 - expectedWinner);
       const newLoserPoints = loserUser.points + K * (0 - expectedLoser);
 
+      const winnerIncrement = Math.round(newWinnerPoints - winnerUser.points);
+      const rawLoserIncrement = Math.round(newLoserPoints - loserUser.points);
+      const loserIncrement = Math.max(rawLoserIncrement, -loserUser.points);
+
       const updatedWinner = await this.prisma.user.update({
         where: { id: winner },
         data: {
-          points: {
-            increment: Math.round(newWinnerPoints - winnerUser.points),
-          },
+          points: { increment: winnerIncrement },
           victories: { increment: 1 },
         },
       });
@@ -178,7 +180,7 @@ export class UserService {
       const updatedLoser = await this.prisma.user.update({
         where: { id: loser },
         data: {
-          points: { increment: Math.round(newLoserPoints - loserUser.points) },
+          points: { increment: loserIncrement },
           defeats: { increment: 1 },
         },
       });
@@ -191,6 +193,7 @@ export class UserService {
       throw new InternalServerErrorException(error);
     }
   }
+
 
   async getUserByPoint() {
     try {
